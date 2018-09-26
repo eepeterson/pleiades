@@ -12,5 +12,5 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url="https://git.doit.wisc.edu/EEPETERSON4/pleiades",
-    packages=setuptools.find_packages()
+    packages=["pleiades"]
 )
