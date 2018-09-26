@@ -1,32 +1,10 @@
-""" This module is used for object oriented computation of axisymmetric magnetic fields.
-
-Written by: Ethan Peterson
-Contact info: ethan.peterson@wisc.edu
-Date: 09/10/2016
-
-Methods:
-    reflect_and_hstack(Rho,Z,*args)
-    transform_to_rtheta(Rho,Z,rho_component,z_component)
-    transform_to_rhoz(R,Theta,r_component,theta_component)
-    locs_to_vals(X,Y,Q,coord_list)
-    get_fieldlines(contourset,level,start_coord=None,end_coord=None,clockwise=True)
-    interp(Rho,Z,Q,x,y)
-    flux_surface_avg(Rho,Z,B,x,y,Q=None)
-"""
 from __future__ import print_function, division, absolute_import, unicode_literals
 import numpy as np
 import scipy.integrate
 from scipy.interpolate import interp1d, interp2d, RectBivariateSpline,UnivariateSpline,griddata
 from scipy.spatial import Delaunay, ConvexHull
-import networkx as nx
-from matplotlib.patches import Polygon
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from matplotlib import ticker
 from matplotlib.collections import LineCollection
-import analysis.datahelpers as dh
-import plottingtools.plottingtools as ptools
-import struct
+#import analysis.datahelpers as dh
 
 def poly_fit(x,y,order=3):
     n = order+1
@@ -258,76 +236,77 @@ def diff_central(x, y):
     f = (x2 - x1)/(x2 - x0)
     return (1-f)*(y2 - y1)/(x2 - x1) + f*(y1 - y0)/(x1 - x0)
 
-def get_F(Rho,Z,psi,B,min_rho,max_rho,start_coord=None,end_coord=None,clockwise=True,plotit=False,dfl_tol=.1):
-    gamma = 5.0/3.0
-    figf,axf = plt.subplots()
-    psi_min,psi_edge = locs_to_vals(Rho,Z,psi,[(min_rho,0),(max_rho,0)])
-    psi_levels = np.linspace(psi_min,psi_edge,500)
-    cff = axf.contour(Rho,Z,psi,tuple(psi_levels))
-    dl_B_list = []
-    for psi0 in psi_levels:
-        if psi0 == 0.0:
-            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=False)
-        else:
-            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=clockwise)
-        s = get_fieldline_distance(flpoints)
-        if np.max(s[1:]-s[0:-1]) > dfl_tol:
-            raise ValueError("fieldline distance between successive points greater than dfl_tol: {0}m".format(dfl_tol))
-        if plotit:
-            x,y = flpoints[:,0],flpoints[:,1]
-            axf.plot(x,y,'bo')
-            axf.plot(x[0],y[0],'go')
-            axf.plot(x[-1],y[-1],'ro')
-        dl_B_list.append(flux_surface_avg(Rho,Z,B,flpoints))
-    psi_new = psi_levels
-    dl_B_new = np.array(dl_B_list)
-    dl_B_new = dh.smooth(dl_B_new,5,mode="valid")
-    psi_new = dh.smooth(psi_new,5,mode="valid")
-    U = UnivariateSpline(psi_new,dl_B_new,k=4,s=0)
-    dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=1,s=0,ext="const")
-    d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=1,s=0,ext="const")
-    #dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=3,s=0,ext="const")
-    #d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=3,s=0,ext="const")
-    term1 = lambda x: gamma*x/U(x)*(dUdpsi(x))**2
-    term2 = lambda x: dUdpsi(x) + x*d2Udpsi2(x)
-    F = lambda x: term1(x) - term2(x)
-    if plotit:
-        z0_idx = np.abs(Z[:,0]).argmin()
-        end_idx = np.abs(Rho[z0_idx,:]-max_rho).argmin()
-        R_of_psi = UnivariateSpline(psi[z0_idx,0:end_idx],Rho[z0_idx,0:end_idx],s=0)
-        psi_test = np.linspace(psi_min,psi_edge,1000)
-        psi_norm = psi_test/psi_edge
-        fig9,(ax9a,ax9b,ax9c) = plt.subplots(3,1,sharex="col")
-        ax9a.plot(psi_new,dl_B_new,"o")
-        ax9a.plot(psi_test,U(psi_test),"r")
-        ax9b.plot(psi_new[1:-1],dUdpsi(psi_new[1:-1]),"o")
-        ax9b.plot(psi_test,dUdpsi(psi_test),"r")
-        ax9c.plot(psi_new[2:-2],d2Udpsi2(psi_new[2:-2]),"o")
-        ax9c.plot(psi_test,d2Udpsi2(psi_test),"r")
-        fig0,((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2,sharex="all",figsize=(18,9))
-        ax0.plot(psi_new/psi_edge,dl_B_new,"o")
-        ax0.plot(psi_norm,U(psi_test),lw=2)
-        ax0.set_ylabel("U")
-        ax0top = ax0.twiny()
-        new_labels = ["{0:1.2f}".format(r) for r in R_of_psi(psi_edge*np.array(ax0.get_xticks()))]
-        ax0top.set_xticklabels(new_labels)
-        ax0top.set_xlabel("R (m)")
-        ax1.plot(psi_norm,dUdpsi(psi_test),'o')
-        ax1.set_ylabel("U'")
-        ax1top = ax1.twiny()
-        ax1top.set_xticklabels(new_labels)
-        ax1top.set_xlabel("R (m)")
-        ax2.plot(psi_norm,term1(psi_test),'o')
-        ax2.plot(psi_norm,term2(psi_test),'o')
-        ax2.set_xlabel("$\\psi/\\psi_{lim}$")
-        ax2.set_ylabel("Term1 and term2")
-        F_clean = dh.smooth(F(psi_test),20)
-        ax3.plot(psi_norm,F_clean,lw=2)
-        ax3.set_xlabel("$\\psi/\\psi_{lim}$")
-        ax3.set_ylabel("F($\\psi$)")
-        #ax3.set_ylim(-1.2,1.2)
-        plt.tight_layout()
-    return F
+# need to remove datahelpers dependency from this before using
+#def get_F(Rho,Z,psi,B,min_rho,max_rho,start_coord=None,end_coord=None,clockwise=True,plotit=False,dfl_tol=.1):
+#    gamma = 5.0/3.0
+#    figf,axf = plt.subplots()
+#    psi_min,psi_edge = locs_to_vals(Rho,Z,psi,[(min_rho,0),(max_rho,0)])
+#    psi_levels = np.linspace(psi_min,psi_edge,500)
+#    cff = axf.contour(Rho,Z,psi,tuple(psi_levels))
+#    dl_B_list = []
+#    for psi0 in psi_levels:
+#        if psi0 == 0.0:
+#            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=False)
+#        else:
+#            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=clockwise)
+#        s = get_fieldline_distance(flpoints)
+#        if np.max(s[1:]-s[0:-1]) > dfl_tol:
+#            raise ValueError("fieldline distance between successive points greater than dfl_tol: {0}m".format(dfl_tol))
+#        if plotit:
+#            x,y = flpoints[:,0],flpoints[:,1]
+#            axf.plot(x,y,'bo')
+#            axf.plot(x[0],y[0],'go')
+#            axf.plot(x[-1],y[-1],'ro')
+#        dl_B_list.append(flux_surface_avg(Rho,Z,B,flpoints))
+#    psi_new = psi_levels
+#    dl_B_new = np.array(dl_B_list)
+#    dl_B_new = dh.smooth(dl_B_new,5,mode="valid")
+#    psi_new = dh.smooth(psi_new,5,mode="valid")
+#    U = UnivariateSpline(psi_new,dl_B_new,k=4,s=0)
+#    dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=1,s=0,ext="const")
+#    d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=1,s=0,ext="const")
+#    #dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=3,s=0,ext="const")
+#    #d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=3,s=0,ext="const")
+#    term1 = lambda x: gamma*x/U(x)*(dUdpsi(x))**2
+#    term2 = lambda x: dUdpsi(x) + x*d2Udpsi2(x)
+#    F = lambda x: term1(x) - term2(x)
+#    if plotit:
+#        z0_idx = np.abs(Z[:,0]).argmin()
+#        end_idx = np.abs(Rho[z0_idx,:]-max_rho).argmin()
+#        R_of_psi = UnivariateSpline(psi[z0_idx,0:end_idx],Rho[z0_idx,0:end_idx],s=0)
+#        psi_test = np.linspace(psi_min,psi_edge,1000)
+#        psi_norm = psi_test/psi_edge
+#        fig9,(ax9a,ax9b,ax9c) = plt.subplots(3,1,sharex="col")
+#        ax9a.plot(psi_new,dl_B_new,"o")
+#        ax9a.plot(psi_test,U(psi_test),"r")
+#        ax9b.plot(psi_new[1:-1],dUdpsi(psi_new[1:-1]),"o")
+#        ax9b.plot(psi_test,dUdpsi(psi_test),"r")
+#        ax9c.plot(psi_new[2:-2],d2Udpsi2(psi_new[2:-2]),"o")
+#        ax9c.plot(psi_test,d2Udpsi2(psi_test),"r")
+#        fig0,((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2,sharex="all",figsize=(18,9))
+#        ax0.plot(psi_new/psi_edge,dl_B_new,"o")
+#        ax0.plot(psi_norm,U(psi_test),lw=2)
+#        ax0.set_ylabel("U")
+#        ax0top = ax0.twiny()
+#        new_labels = ["{0:1.2f}".format(r) for r in R_of_psi(psi_edge*np.array(ax0.get_xticks()))]
+#        ax0top.set_xticklabels(new_labels)
+#        ax0top.set_xlabel("R (m)")
+#        ax1.plot(psi_norm,dUdpsi(psi_test),'o')
+#        ax1.set_ylabel("U'")
+#        ax1top = ax1.twiny()
+#        ax1top.set_xticklabels(new_labels)
+#        ax1top.set_xlabel("R (m)")
+#        ax2.plot(psi_norm,term1(psi_test),'o')
+#        ax2.plot(psi_norm,term2(psi_test),'o')
+#        ax2.set_xlabel("$\\psi/\\psi_{lim}$")
+#        ax2.set_ylabel("Term1 and term2")
+#        F_clean = dh.smooth(F(psi_test),20)
+#        ax3.plot(psi_norm,F_clean,lw=2)
+#        ax3.set_xlabel("$\\psi/\\psi_{lim}$")
+#        ax3.set_ylabel("F($\\psi$)")
+#        #ax3.set_ylim(-1.2,1.2)
+#        plt.tight_layout()
+#    return F
 
 def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
     title = str(title)+" cursign,nnr,nnz,nnv   = "

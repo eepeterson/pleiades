@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from numpy import pi,linspace,meshgrid,sin,cos,sqrt,sum,array,ones,zeros,hstack,vstack,sign,mod,isfinite,ceil,isclose
 from scipy.special import ellipk, ellipe
 from multiprocessing import Process, Queue, cpu_count
-import tables
+#import tables
 import warnings
 import pickle
 import sys
@@ -167,35 +167,35 @@ def compute_greens(R,Z,rzdir=None,nprocs=1):
 
     return (gpsi,gBR,gBZ)
 
-def write_large_greens(R,Z,filename,rzdir=None,chunkbytes=1024**3,nprocs=1):
-    # default chunksize is 1GB per greens function
-    if rzdir is None:
-        rzdir = vstack((R,Z,ones(len(R)))).T
-    m,n = len(R),len(rzdir)
-    gridbytes = 8*m
-    print("chunkbytes: ", chunkbytes)
-    print("gridbytes: ", gridbytes)
-    n_perchunk = int(ceil(chunkbytes/float(gridbytes)))
-    print("n_perchunk: ", n_perchunk)
-    n_chunks = int(ceil(n/float(n_perchunk)))
-    print("n_chunks: ", n_chunks)
-    fh = tables.openFile(filename,mode="w")
-    filters = tables.Filters(complevel=5,complib='blosc')
-    gpsi_arr = fh.createCArray(fh.root,'gpsi',tables.Atom.from_dtype(R.dtype),
-            shape=(m,n),filters=filters)
-    gBR_arr = fh.createCArray(fh.root,'gBR',tables.Atom.from_dtype(R.dtype),
-            shape=(m,n),filters=filters)
-    gBZ_arr = fh.createCArray(fh.root,'gBZ',tables.Atom.from_dtype(R.dtype),
-            shape=(m,n),filters=filters)
-    for i in xrange(n_chunks):
-        print("processing chunk {0}".format(i))
-        gpsi_chunk,gBR_chunk,gBZ_chunk = compute_greens(R,Z,rzdir=rzdir[i*n_perchunk:(i+1)*n_perchunk],nprocs=nprocs)
-        print("chunk shapes: {0}, {1}, {2}".format(gpsi_chunk.shape,gBR_chunk.shape,gBZ_chunk.shape))
-        gpsi_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gpsi_chunk
-        gBR_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBR_chunk
-        gBZ_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBZ_chunk
-
-    fh.close()
+#def write_large_greens(R,Z,filename,rzdir=None,chunkbytes=1024**3,nprocs=1):
+#    # default chunksize is 1GB per greens function
+#    if rzdir is None:
+#        rzdir = vstack((R,Z,ones(len(R)))).T
+#    m,n = len(R),len(rzdir)
+#    gridbytes = 8*m
+#    print("chunkbytes: ", chunkbytes)
+#    print("gridbytes: ", gridbytes)
+#    n_perchunk = int(ceil(chunkbytes/float(gridbytes)))
+#    print("n_perchunk: ", n_perchunk)
+#    n_chunks = int(ceil(n/float(n_perchunk)))
+#    print("n_chunks: ", n_chunks)
+#    fh = tables.openFile(filename,mode="w")
+#    filters = tables.Filters(complevel=5,complib='blosc')
+#    gpsi_arr = fh.createCArray(fh.root,'gpsi',tables.Atom.from_dtype(R.dtype),
+#            shape=(m,n),filters=filters)
+#    gBR_arr = fh.createCArray(fh.root,'gBR',tables.Atom.from_dtype(R.dtype),
+#            shape=(m,n),filters=filters)
+#    gBZ_arr = fh.createCArray(fh.root,'gBZ',tables.Atom.from_dtype(R.dtype),
+#            shape=(m,n),filters=filters)
+#    for i in xrange(n_chunks):
+#        print("processing chunk {0}".format(i))
+#        gpsi_chunk,gBR_chunk,gBZ_chunk = compute_greens(R,Z,rzdir=rzdir[i*n_perchunk:(i+1)*n_perchunk],nprocs=nprocs)
+#        print("chunk shapes: {0}, {1}, {2}".format(gpsi_chunk.shape,gBR_chunk.shape,gBZ_chunk.shape))
+#        gpsi_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gpsi_chunk
+#        gBR_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBR_chunk
+#        gBZ_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBZ_chunk
+#
+#    fh.close()
 
 
 

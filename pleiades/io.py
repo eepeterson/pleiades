@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
-from .helpers import *
+from pleiades.helpers import *
 
 class EQDSK(dict):
     def __init__(self,fname=None):

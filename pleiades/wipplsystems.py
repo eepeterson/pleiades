@@ -1,24 +1,9 @@
-""" This module is used for object oriented computation of axisymmetric magnetic fields.
-
-Written by: Ethan Peterson
-Contact info: ethan.peterson@wisc.edu
-Date: 09/10/2016
-
-Classes:
-    TREXCoils(object)
-    VesselMagnets(object)
-
-Methods:
-    build_wipal(vessel=True,trex=(False,0,0),ltrx=(False,0),dipole=(False,(0,0)))
-    build_gdt()
-"""
 from __future__ import print_function, division, absolute_import, unicode_literals
-from .core import *
-import .grids
+from pleiades.core import *
+import pleiades.grids
 import numpy as np
 from matplotlib.patches import Polygon,Wedge
 from matplotlib.collections import PatchCollection
-from scipy.spatial import ConvexHull
 import matplotlib as mpl
 import os
 import warnings
