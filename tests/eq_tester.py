@@ -1,17 +1,17 @@
-from fields.helpers import *
-from fields.core import ZSymmCoilSet
-from fields.systems import BRB,Dipole
-from fields.grids import RectGrid
-import plottingtools.plottingtools as ptools
+from __future__ import print_function, division, absolute_import, unicode_literals
+from pleiades.helpers import *
+from pleiades.core import ZSymmCoilSet
+from pleiades.wipplsystems import BRB,Dipole
+from pleiades.grids import RectGrid
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import ticker
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as colors
 import os
-from eqmath import get_gpsi
-from eq_solve import compute_equilibrium
-from eqreadwrite import write_eqdsk
+from pleiades.math import get_gpsi
+from pleiades.eq_solve import compute_equilibrium
+from pleiades.io import write_eqdsk
 
 # build grid
 RZgrid = RectGrid((0,1,257),(-.5,.5,257))
@@ -44,7 +44,7 @@ gc1,gc2 = np.sum(brb.trex.gpsi,axis=-1).reshape(R.shape)[z1idx,r1idx], np.sum(br
 gp1,gp2 = 0, 0
 iplas = 0
 new_trex_cur = -((gm1-gm2)*brb.mirrors.currents[0] + (gp1-gp2)*iplas)/(gc1 - gc2)
-print new_trex_cur
+print(new_trex_cur)
 brb.trex.currents = [new_trex_cur,new_trex_cur]
 
 # get desired field quantities from brb object
@@ -61,7 +61,7 @@ alpha = 2.0
 beta0 = .00001
 B0 = locs_to_vals(R,Z,B,[(0,0)])[0]
 P0 = beta0*B0**2/(2*4*np.pi*1E-7)
-print "pressure ", P0
+print("pressure ", P0)
 # build pressure function of cylindrical radius
 Pfunc = lambda x: P0*(1-(x/a)**2)**alpha if x < a else 0
 # get greens function for plasma currents
@@ -93,7 +93,6 @@ plt.plot(Z[:,ridx],BR[:,ridx])
 plt.show()
 
 # plot BRB with patches and stuff
-#cmap = ptools.truncate_colormap(plt.get_cmap('CMRmap_r'),minval=.05,maxval=.85)
 fig,ax = plt.subplots(figsize=(10,8))
 cf = ax.contourf(R,Z,B,101,cmap="rainbow",locator=ticker.LogLocator(),zorder=0)
 cs = ax.contour(R,Z,psi,51,colors='k',lw=2,zorder=1)
@@ -108,7 +107,5 @@ ax.set_xlabel("R (m)")
 ax.set_ylim(-.5,.5)
 ax.set_aspect('equal')
 patches = brb.patches
-#ptools.transpose_patches(patches)
 ax.add_collection(PatchCollection(patches,match_original=True))
-ptools.makePlot(fig,[ax])
 plt.show()

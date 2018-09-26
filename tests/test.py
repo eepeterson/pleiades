@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import, unicode_literals
 import numpy as np
 import matplotlib.pyplot as plt
-from eqmath import new_greens_test,short_greens_test
+from pleiades.math import new_greens_test,short_greens_test
 
 
 nlist = np.array([5,10,20,30,40,50])
