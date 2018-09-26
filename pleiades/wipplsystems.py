@@ -304,7 +304,8 @@ class PCX_magCage(object):
 
 
 class PhilipsMRI(object):
-    def __init__(self, (rho0, z0), current):
+    def __init__(self, loc, current):
+        rho0, z0 = loc
         delta_rho = .01
         delta_z = .01
         nz = 1.5 // delta_z

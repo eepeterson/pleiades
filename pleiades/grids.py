@@ -54,7 +54,9 @@ class PointsListGrid(UnstructuredGrid):
 
 
 class RectGrid(StructuredGrid):
-    def __init__(self,(Rmin,Rmax,nR),(Zmin,Zmax,nZ)):
+    def __init__(self,rdattup,zdattup):
+        Rmin,Rmax,nR = rdattup
+        Zmin,Zmax,nZ = zdattup
         R,Z = meshgrid(linspace(Rmin,Rmax,nR,dtype="float32"),linspace(Zmin,Zmax,nZ,dtype="float32"))
         self._shape = R.shape
         self._size = R.size
