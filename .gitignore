@@ -1,0 +1,20 @@
+# .gitignore
+
+# ignore compiled python files
+*.pyc
+
+# ignore swap files
+*.swp
+
+# Ignore saved plots
+*.png
+*.pdf
+*.eps
+
+# Ignore data files
+*.npy
+*.p
+*.mat
+*.csv
+*.hdf5
+*.h5
