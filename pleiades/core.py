@@ -24,7 +24,6 @@ from matplotlib.collections import PatchCollection
 from matplotlib.transforms import Affine2D
 from itertools import izip
 from numbers import Number
-#import tables
 import warnings
 import pickle
 import pleiades.grids as grids
@@ -53,7 +52,8 @@ class Current(object):
         return self._loc
 
     @loc.setter
-    def loc(self,(r,z)):
+    def loc(self,loc):
+        r,z = loc
         if r <= 0:
             warnings.warn("Current r location found in left half plane, setting it to zero",UserWarning)
             r = 0
@@ -165,13 +165,13 @@ class CurrentGroup(object):
     def patch(self):
         return self._patch
 
-    def translate(self,(dr,dz)):
+    def translate(self,dr,dz):
         for c_obj in self._obj_list:
             r,z = c_obj.loc
             c_obj.loc = r+dr,z+dz
         self.update_patch()
 
-    def rotate(self,(r0,z0),angle):
+    def rotate(self,r0,z0,angle):
         angle = pi/180.0*angle
         cost = cos(angle)
         sint = sin(angle)
@@ -327,7 +327,7 @@ class Magnet(CurrentGroup):
         return self._loc
 
     @loc.setter
-    def loc(self,(r0,z0)):
+    def loc(self,r0,z0):
         self.rebuild("loc",(r0,z0))
 
     @CurrentGroup.current.setter
@@ -381,7 +381,7 @@ class Magnet(CurrentGroup):
         self._mu_hat += angle
         super(Magnet,self).rotate((r0,z0),angle)
 
-    def translate(self,(dr,dz)):
+    def translate(self,dr,dz):
         r0,z0 = self._loc
         self.loc = (r0+dr,z0+dz)
 
@@ -464,7 +464,8 @@ class CurrentArray(CurrentGroup):
         return self._loc
 
     @loc.setter
-    def loc(self,(r0,z0)):
+    def loc(self,loc):
+        r0,z0 = loc
         self.rebuild("loc",(r0,z0))
 
     @property
@@ -510,7 +511,7 @@ class CurrentArray(CurrentGroup):
         r0,z0 = self._loc
         super(CurrentArray,self).rotate((r0,z0),deg)
 
-    def translate(self,(dr,dz)):
+    def translate(self,dr,dz):
         r0,z0 = self._loc
         self.loc = (r0+dr,z0+dz)
 
@@ -1240,37 +1241,6 @@ def get_class(cls_str):
     for comp in parts[1:]:
         m = getattr(m, comp)
     return m
-
-#def write_large_greens(R,Z,filename,rzdir=None,chunkbytes=1024**3,nprocs=1):
-#    # default chunksize is 1GB per greens function
-#    if rzdir is None:
-#        rzdir = vstack((R,Z,ones(len(R)))).T
-#    m,n = len(R),len(rzdir)
-#    gridbytes = 8*m
-#    print("chunkbytes: ", chunkbytes)
-#    print("gridbytes: ", gridbytes)
-#    n_perchunk = int(ceil(chunkbytes/float(gridbytes)))
-#    print("n_perchunk: ", n_perchunk)
-#    n_chunks = int(ceil(n/float(n_perchunk)))
-#    print("n_chunks: ", n_chunks)
-#    fh = tables.openFile(filename,mode="w")
-#    filters = tables.Filters(complevel=5,complib='blosc')
-#    gpsi_arr = fh.createCArray(fh.root,'gpsi',tables.Atom.from_dtype(R.dtype),
-#            shape=(m,n),filters=filters)
-#    gBR_arr = fh.createCArray(fh.root,'gBR',tables.Atom.from_dtype(R.dtype),
-#            shape=(m,n),filters=filters)
-#    gBZ_arr = fh.createCArray(fh.root,'gBZ',tables.Atom.from_dtype(R.dtype),
-#            shape=(m,n),filters=filters)
-#    for i in xrange(n_chunks):
-#        print("processing chunk {0}".format(i))
-#        gpsi_chunk,gBR_chunk,gBZ_chunk = compute_greens(R,Z,rzdir=rzdir[i*n_perchunk:(i+1)*n_perchunk],nprocs=nprocs)
-#        print("chunk shapes: {0}, {1}, {2}".format(gpsi_chunk.shape,gBR_chunk.shape,gBZ_chunk.shape))
-#        gpsi_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gpsi_chunk
-#        gBR_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBR_chunk
-#        gBZ_arr[:,i*n_perchunk:(i+1)*n_perchunk] = gBZ_chunk
-#
-#    fh.close()
-
 
 
 
