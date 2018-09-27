@@ -18,3 +18,8 @@
 *.csv
 *.hdf5
 *.h5
+
+# Ignore build/ dist/ and egg info
+build/*
+dist/*
+pleiades.egg-info/*
