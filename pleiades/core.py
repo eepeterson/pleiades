@@ -22,7 +22,6 @@ from multiprocessing import Process, Queue, cpu_count
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.transforms import Affine2D
-from itertools import izip
 from numbers import Number
 import warnings
 import pickle
@@ -715,7 +714,7 @@ class Component(object):
     def currents(self,new_currents):
         new_currents = array(new_currents,dtype="float32")
         assert len(new_currents) == len(self._groups),"length of groups and currents must match"
-        for group,cur in izip(self._groups,new_currents):
+        for group,cur in zip(self._groups,new_currents):
             group.current = cur
 
     @property
@@ -740,7 +739,7 @@ class Component(object):
 
     @property
     def patches(self):
-        return [group.patch for group,mask in izip(self._groups,self._patch_mask) if not mask]
+        return [group.patch for group,mask in zip(self._groups,self._patch_mask) if not mask]
 
     @property
     def gpsi(self):
@@ -785,7 +784,7 @@ class Component(object):
     def to_dict(self):
         cls_dict = {key.strip("_"):value for key,value in self.__dict__.items()}
         cls_dict.pop(label,None)
-        for group,label in izip(self._groups,self._labels):
+        for group,label in zip(self._groups,self._labels):
             cls_dict[label] = group.to_dict()
         cls_dict["cls"] = str(self.__class__).split("'")[1]
         return cls_dict
@@ -1025,7 +1024,7 @@ class Configuration(object):
         self.components = kwargs.pop("components",[])
         self.labels = kwargs.pop("labels",[])
         self.filename = kwargs.pop("filename",None)
-        for comp,label in izip(self.components,self.labels):
+        for comp,label in zip(self.components,self.labels):
             setattr(self,label,comp)
         self.grid = kwargs.pop("grid",None)
         self.artists = kwargs.pop("artists",[])
