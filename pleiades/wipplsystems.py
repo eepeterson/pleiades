@@ -111,7 +111,7 @@ class VesselMagnets(Component):
 
     @Component.patches.getter
     def patches(self):
-        plist = [group.patches for group,mask in izip(self._groups,self._patch_mask) if not mask]
+        plist = [group.patches for group,mask in zip(self._groups,self._patch_mask) if not mask]
         return [p for sublist in plist for p in sublist]
 
 class Dipole(Component):
@@ -148,7 +148,7 @@ class Dipole(Component):
         
     @Component.patches.getter
     def patches(self):
-        plist = [group.patches for group,mask in izip(self._groups,self._patch_mask) if not mask]
+        plist = [group.patches for group,mask in zip(self._groups,self._patch_mask) if not mask]
         return [p for sublist in plist for p in sublist]
 
 class BRB(Configuration):
