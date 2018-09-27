@@ -809,6 +809,99 @@ class Component(object):
         obj._grid = None
         return obj
 
+'''
+Added 9-18-17 by Roger Waleffe
+'''
+class Coil(Component):
+    def __init__(self,**kwargs):
+        super(Coil,self).__init__()
+        r0 = float(kwargs.pop("r0",1))
+        z0 = float(kwargs.pop("z0",1))
+        nr = kwargs.pop("nr",10)
+        nz = kwargs.pop("nz",10)
+        dr = kwargs.pop("dr",.01)
+        dz = kwargs.pop("dz",.01)
+        labels = kwargs.pop("labels",None)
+        currents = array(kwargs.pop("currents",[1]),dtype="float")
+        nprocs = kwargs.pop("nprocs",[4])
+        patch_mask = kwargs.pop("patch_mask",[0])
+        grid = kwargs.pop("grid",None)
+        self._r0 = r0
+        self._z0 = z0
+        self._nr = nr
+        self._nz = nz
+        self._dr = dr
+        self._dz = dz
+        coil1 = CurrentArray(loc=(r0,z0),nr=nr,nz=nz,dz=dz,dr=dr,**kwargs)
+        self.groups = [coil1]
+        if labels is None:
+            labels = ["group{0}".format(i) for i in range(len(self.groups))]
+        self.labels = labels
+        self.currents = currents
+        self.nprocs = nprocs
+        self.patch_mask = patch_mask
+        self.grid = grid
+
+    @property
+    def z0(self):
+        return self._z0
+
+    @z0.setter
+    def z0(self,new_z0):
+        r0 = self._r0
+        self._z0 = new_z0
+        self.groups[0].loc = (r0,new_z0)
+
+    @property
+    def r0(self):
+        return self._r0
+
+    @r0.setter
+    def r0(self,new_r0):
+        z0 = self._z0
+        self._r0 = new_r0
+        self.groups[0].loc = (new_r0,z0)
+
+    @property
+    def nr(self):
+        return self._nr
+
+    @nr.setter
+    def nr(self,new_nr):
+        self._nr = new_nr
+        for c_arr in self._groups:
+            c_arr.nr = new_nr
+
+    @property
+    def nz(self):
+        return self._nz
+
+    @nz.setter
+    def nz(self,new_nz):
+        self._nz = new_nz
+        for c_arr in self._groups:
+            c_arr.nz = new_nz
+
+    @property
+    def dr(self):
+        return self._dr
+
+    @dr.setter
+    def dr(self,new_dr):
+        self._dr = new_dr
+        for c_arr in self._groups:
+            c_arr.dr = new_dr
+
+    @property
+    def dz(self):
+        return self._dz
+
+    @dz.setter
+    def dz(self,new_dz):
+        self._dz = new_dz
+        for c_arr in self._groups:
+            c_arr.dz = new_dz
+
 class CoilPack(Component):
     def __init__(self,**kwargs):
         super(CoilPack,self).__init__()

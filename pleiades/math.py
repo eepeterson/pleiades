@@ -7,6 +7,21 @@ import warnings
 import pickle
 import sys
 
+def diff_12_central(x, y):
+    x0 = x[:-2]
+    x1 = x[1:-1]
+    x2 = x[2:]
+    y0 = y[:-2]
+    y1 = y[1:-1]
+    y2 = y[2:]
+    f = (x2 - x1) / (x2 - x0)
+
+    d_one = (1 - f) * (y2 - y1) / (x2 - x1) + f * (y1 - y0) / (x1 - x0)  # first derivative at x1 (dy/dx)
+    d_two = 2 * (y0 / ((x1 - x0) * (x2 - x0)) + y1 / ((x1 - x0) * (x1 - x2)) + y2 / (
+                (x2 - x0) * (x2 - x1)))  # second derivative at x1 (d^2y/dx^2)
+
+    return d_one, d_two
+
 def new_greens_test(R,Z):
     m,n = len(R),len(R)
     gpsi = zeros((m,n))
