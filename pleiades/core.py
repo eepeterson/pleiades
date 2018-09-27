@@ -378,7 +378,7 @@ class Magnet(CurrentGroup):
     def rotate(self,angle):
         r0,z0 = self._loc
         self._mu_hat += angle
-        super(Magnet,self).rotate((r0,z0),angle)
+        super(Magnet,self).rotate(r0,z0,angle)
 
     def translate(self,dr,dz):
         r0,z0 = self._loc
@@ -508,7 +508,7 @@ class CurrentArray(CurrentGroup):
         deg = new_angle - self._angle
         self._angle = new_angle
         r0,z0 = self._loc
-        super(CurrentArray,self).rotate((r0,z0),deg)
+        super(CurrentArray,self).rotate(r0,z0,deg)
 
     def translate(self,dr,dz):
         r0,z0 = self._loc
@@ -516,7 +516,7 @@ class CurrentArray(CurrentGroup):
 
     def rotate(self,angle):
         r0,z0 = self._loc
-        super(CurrentArray,self).rotate_around((r0,z0),angle)
+        super(CurrentArray,self).rotate(r0,z0,angle)
 
     def build_patchargs(self,**kwargs):
         r0,z0 = self._loc
