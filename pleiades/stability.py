@@ -1,9 +1,9 @@
-# need to remove datahelpers and plottingtools dependency!
-
-#import analysis.datahelpers as dh
-#import plottingtools.plottingtools as ptools
-#from pleiades.helpers import get_fieldline_distance, get_fieldlines, interp
+#####  still need to remove datahelpers dependency!
 #
+#from __future__ import print_function, division, absolute_import, unicode_literals
+#import analysis.datahelpers as dh
+####import plottingtools.plottingtools as ptools
+#from pleiades.helpers import get_fieldline_distance, get_fieldlines, interp
 #import numpy as np
 #import matplotlib.pyplot as plt
 #from scipy.interpolate import InterpolatedUnivariateSpline, UnivariateSpline
@@ -101,7 +101,8 @@
 #        ax[1,2].set_xlabel('s')
 #
 #        fig.tight_layout()
-#        ptools.makePlot(fig,ax)
+#        #ptools.makePlot(fig,ax)
+#        plt.show()
 #
 #    return -1*f_curv(s)
 #
@@ -165,7 +166,8 @@
 #        [ax2.axvline(_x, linewidth=1, ls='--', color='k') for _x in psi_values]
 #        ax2.set_ylabel('Pressure')
 #        ax2.set_xlabel('$\psi$')
-#        ptools.makePlot(fig,[ax1,ax2])#,filename='pressure',fileformat='eps')
+#        #ptools.makePlot(fig,[ax1,ax2])#,filename='pressure',fileformat='eps')
+#        plt.show()
 #
 #    params_array = []
 #
@@ -209,7 +211,8 @@
 #            ax.set_xlabel('z (m)')
 #            ax.set_ylabel('r (m)')
 #            ax.legend(['original','evenly spaced'])
-#            ptools.makePlot(fig,[ax])
+#            #ptools.makePlot(fig,[ax])
+#            plt.show()
 #
 #        ### WORK WITH NEW EVENLY SPACED GRID
 #        flpoints_new = np.vstack((rlimit,zlimit)).T
@@ -226,7 +229,8 @@
 #            ax.plot(s,rlimit,'ro')
 #            ax.set_xlabel('s (m)')
 #            ax.legend(['curvature','mod B','radius'])
-#            ptools.makePlot(fig,[ax])
+#            #ptools.makePlot(fig,[ax])
+#            plt.show()
 #
 #        params = [flpoints_new,b_fl,c_fl,d_fl,p_fl,dp_dpsi_fl]
 #        params_array.append(params)
@@ -268,7 +272,7 @@
 #    ds = s[-1]/(len(s)-1)
 #
 #    if bc_z_limit:
-#        print 'Clipping arrays to fit in boundary...'
+#        print('Clipping arrays to fit in boundary...')
 #        f_half = zy[:len(zy)/2]
 #        z_ind = np.argmin( np.abs(np.abs(f_half)-bc_z_limit) )
 #
@@ -286,7 +290,8 @@
 #        ax.plot(s,ry,'ro')
 #        ax.legend(['curvature','mod B','radius'])
 #        ax.set_title('Arrays as a function of s')
-#        ptools.makePlot(fig,[ax])#,filename='arrays',fileformat='eps')
+#        #ptools.makePlot(fig,[ax])#,filename='arrays',fileformat='eps')
+#        plt.show()
 #
 #    #may want to 'symmetrize' the arrays by taking the average of each s value
 #    for i in range(len(s)/2):
@@ -360,7 +365,7 @@
 #
 #
 #    vals, vecs = eig(M,b=N)
-#    #print vals
+#    #print(vals)
 #    sort_index = np.argsort(np.abs(vals))
 #
 #    vals = vals[sort_index]
@@ -376,7 +381,7 @@
 #        sy_cent = np.linspace(-s[-1]/2,s[-1]/2,NY) #maybe not actually exact points
 #
 #        fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True, figsize=(13,7))
-#        lis = range(0,5)
+#        lis = np.arange(0,5)
 #        for i in lis:
 #            ax1.plot(sx_cent,vecs[:NX,i],linewidth=2)
 #            ax2.plot(sy_cent,vecs[NX:,i],linewidth=2)
@@ -392,7 +397,8 @@
 #        ax2.set_xlabel('s (centered at z=0)')
 #        ax2.set_ylabel('Y')
 #
-#        ptools.makePlot(fig,[ax1,ax2])#,filename='highermodes',fileformat='eps')
+#        #ptools.makePlot(fig,[ax1,ax2])#,filename='highermodes',fileformat='eps')
+#        plt.show()
 #
 #    return vals,vecs,sx,sy
 #
@@ -435,7 +441,7 @@
 #    fdr = fr.derivative()
 #
 #    if bc_z_limit:
-#        print 'Clipping arrays to fit in boundary...'
+#        print('Clipping arrays to fit in boundary...')
 #        f_half = zy[:len(zy)/2]
 #        z_ind = np.argmin( np.abs(np.abs(f_half)-bc_z_limit) )
 #
@@ -457,7 +463,8 @@
 #        ax2.plot(s,fdB(s),linewidth=2)
 #        ax2.legend(['radius derivative','B derivative'])
 #        ax2.set_xlabel('s (m)')
-#        ptools.makePlot(fig,[ax1,ax2])
+#        #ptools.makePlot(fig,[ax1,ax2])
+#        plt.show()
 #
 #    p = [fr, fB, fk, rho, press, dpdphi, fdB, fdr]
 #
@@ -474,7 +481,7 @@
 #    vg[0] = G = G0
 #
 #    for i in range(1, len(s)):
-#        #print i
+#        #print(i)
 #        h = s[i] - s[i-1]
 #
 #        k0 = h * __x(s[i-1], X, Y, F, G, p, omega)
@@ -502,7 +509,7 @@
 #        vf[i] = F = F + (m0+m1+m1+m2+m2+m3)/6.0
 #        vg[i] = G = G + (n0+n1+n1+n2+n2+n3)/6.0
 #
-#        #print X,Y,F,G
+#        #print(X,Y,F,G)
 #
 #    if plotit:
 #        #s_centered = np.linspace(-s[-1]/2,s[-1]/2,len(s))
@@ -516,7 +523,8 @@
 #        ax2.set_xlabel('s')
 #        ax2.set_ylabel('Y')
 #
-#        ptools.makePlot(fig,[ax1,ax2])
+#        #ptools.makePlot(fig,[ax1,ax2])
+#        plt.show()
 #
 #    return vx, vy, vf, vg, s
 #
