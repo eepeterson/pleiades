@@ -642,13 +642,13 @@ class Component(object):
             if nprocs > proc_max:
                 nprocs = proc_max
             chunksize = int(ceil(rzdir.shape[0]/float(nprocs)))
-            for j in xrange(nprocs):
+            for j in range(nprocs):
                 p = Process(target=_get_greens,args=(R,Z,rzdir[j*chunksize:(j+1)*chunksize,:]),kwargs={"out_q":out_q})
                 procs.append(p)
                 p.start()
                 pid_list.append(str(p.pid))
 
-            for k in xrange(nprocs):
+            for k in range(nprocs):
                 g_tup = out_q.get()
                 gpsi[:,i] += g_tup[0]
                 gBR[:,i] += g_tup[1]
@@ -1215,12 +1215,12 @@ def compute_greens(R,Z,rzdir=None,nprocs=1):
     out_q = Queue()
     chunksize = int(ceil(rzdir.shape[0]/float(nprocs)))
     print(chunksize)
-    for i in xrange(nprocs):
+    for i in range(nprocs):
         p = Process(target=get_greens,args=(R,Z,rzdir[i*chunksize:(i+1)*chunksize,:]),kwargs={"out_q":out_q,"out_idx":i})
         procs.append(p)
         p.start()
 
-    for j in xrange(nprocs):
+    for j in range(nprocs):
         print("getting g_tup #: {0}".format(j))
         g_tup = out_q.get()
         idx = g_tup[0]
