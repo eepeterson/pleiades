@@ -1,22 +1,10 @@
+from __future__ import print_function, division, absolute_import, unicode_literals
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt
-from fields.helpers import locs_to_vals
+from pleiades.helpers import locs_to_vals
 import copy
-
-import plottingtools.plottingtools as ptools
-
-import copy
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import ticker
-
-# different functions for different physics terms
-# also different functions for different maps R-->psi psi-->R
-
-cmap_r = ptools.truncate_colormap(plt.get_cmap('CMRmap_r'), minval=.05, maxval=.85)
-cmap = ptools.truncate_colormap(plt.get_cmap('CMRmap'), minval=.15, maxval=.95)
-
 
 def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br, a0, coil_z, tol=1E-10, maxiter=100,
                         relax=0.0, plas_clip=None, plotit=False):
@@ -53,8 +41,8 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
         Err = 1
         k = 0
         while Err > tol and k < maxiter:
-            print k
-            print Err
+            print(k)
+            print(Err)
             if plotit:
                 ## Plot P vs R, Psi vs R, P vs Psi and Pprime vs Psi
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex="col")
@@ -109,12 +97,12 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
             ## Evaluate error between iterations and update counter
             Err = 1. / np.abs(psi_edge) * np.sqrt(np.sum((psi - psi_old) ** 2))
             k += 1
-        print k
-        print Err
+        print(k)
+        print(Err)
 
         # will crash here if only run once cause referenced before assignment
         if Err > tol:
-            print "Final A = " + str(a_old)
+            print("Final A = " + str(a_old))
             return psi_return_old.reshape(R.shape), plas_currents_return_old.reshape(R.shape), Err_old
 
         B = np.sqrt((g_br.dot(plas_currents.flatten()).reshape(R.shape) + br_vac) ** 2 + (
@@ -133,7 +121,7 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
         a_new = (1 - relax) * R[z_ind_a, r_ind_a] + relax * a_new
         plas_clip = np.logical_or(R ** 2 + Z ** 2 > a_new ** 2, np.abs(Z) > coil_z)
 
-        print A_err, a_new
+        print(A_err, a_new)
 
         psi_return_old = copy.copy(psi)
         plas_currents_return_old = copy.copy(plas_currents)

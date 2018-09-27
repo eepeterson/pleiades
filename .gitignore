@@ -18,6 +18,7 @@
 *.csv
 *.hdf5
 *.h5
+.ipynb*
 
 # Ignore build/ dist/ and egg info
 build/*

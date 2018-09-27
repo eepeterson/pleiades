@@ -1,7 +1,8 @@
+from __future__ import print_function, division, absolute_import, unicode_literals
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt
-from fields.helpers import locs_to_vals
+from pleiades.helpers import locs_to_vals
 
 
 # different functions for different physics terms
@@ -39,8 +40,8 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
     a_count = 0
     done = False
     while Err > tol and k < maxiter:
-        print k
-        print Err
+        print(k)
+        print(Err)
         if plotit:
             ## Plot P vs R, Psi vs R, P vs Psi and Pprime vs Psi
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex="col")
@@ -96,7 +97,7 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
 
         if a_count > 100 and A_Err > 0.01 and not done:
             done = True
-            print "NO LONGER CONVERGING, TURNING TO A PREVIOUS A"
+            print("NO LONGER CONVERGING, TURNING TO A PREVIOUS A")
             psi = psi_keep
             plas_currents = plas_currents_keep
             a_new = 0.99 * a_old
@@ -104,7 +105,7 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
         p_z0 = np.array([Pfunc(b, a_new) for b in r_z0])
         psi_z0 = psi[z0_idx]
         lim_idx = np.argmin(np.abs(r_z0 - a_new))
-        print a_new
+        print(a_new)
 
         ## find new midplane psi vector and edge flux and update p interpolation
         psi_z0 = psi[z0_idx]
@@ -173,7 +174,7 @@ def compute_equilibrium(R, Z, Pfunc, psi_vac, g_psi, bz_vac, br_vac, g_bz, g_br,
         ## Evaluate error between iterations and update counter
         Err = 1. / np.abs(psi_edge) * np.sqrt(np.sum((psi - psi_old) ** 2))
         k += 1
-    print k
-    print Err
+    print(k)
+    print(Err)
 
     return psi.reshape(R.shape), plas_currents.reshape(R.shape), Err, a_new
