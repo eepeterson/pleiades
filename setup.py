@@ -10,7 +10,6 @@ setuptools.setup(
     author_email="ethan.peterson@wisc.edu",
     description="A package for designing plasma physics experiments",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
     url="https://git.doit.wisc.edu/EEPETERSON4/pleiades",
-    packages=["pleiades"]
+    packages=setuptools.find_packages()
 )
