@@ -634,7 +634,7 @@ class Component(object):
         gBZ = zeros((m,n))
         R = self.grid.R1D
         Z = self.grid.Z1D
-        for i,(group,nprocs) in enumerate(izip(self._groups,self._nprocs)):
+        for i,(group,nprocs) in enumerate(zip(self._groups,self._nprocs)):
             rzdir = group.rzdir
             procs = []
             pid_list = []
@@ -684,7 +684,7 @@ class Component(object):
             pass
         # then make new ones
         self._labels = new_labels
-        for label,group in izip(self._labels,self._groups):
+        for label,group in zip(self._labels,self._groups):
             setattr(self,label,group)
 
     @property
