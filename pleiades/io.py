@@ -94,7 +94,7 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
 
     lim_ves_pairs = [loc for pair in zip(rlimit,zlimit) for loc in pair]+[loc for pair in zip(rves,zves) for loc in pair]
 
-    with open(fname,"wb") as f:
+    with open(fname,"w") as f:
         ## line 1 -- write grid information: cursign, nnr, nnz, nnv
         f.write(title+"".join("{:4d}".format(xi) for xi in [int(cursign),nnr,nnz,nnv]))
         ## line 2 -- write rbox,zbox,0,0,0
