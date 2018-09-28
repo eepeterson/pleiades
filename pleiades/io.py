@@ -90,6 +90,7 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
 #    ax.plot(r,z,"yo")
 #    ax.plot(rves,zves,"go")
 #    plt.show()
+    plt.close()
 
     lim_ves_pairs = [loc for pair in zip(rlimit,zlimit) for loc in pair]+[loc for pair in zip(rves,zves) for loc in pair]
 
