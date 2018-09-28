@@ -17,7 +17,7 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
     dz = np.abs(Z[1,0]-Z[0,0])
     p_z0 = np.array(list(map(Pfunc,r_z0)))
     psi_z0 = psi[z0_idx]
-    lim_idx = (i for i,p in enumerate(p_z0) if p == 0.0).next()
+    lim_idx = next((i for i,p in enumerate(p_z0) if p == 0.0))
     a = r_z0[lim_idx]
     p_psifit = InterpolatedUnivariateSpline(psi_z0[0:lim_idx+1],p_z0[0:lim_idx+1],ext="zeros")
     pprime_fit = p_psifit.derivative()
@@ -85,7 +85,7 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
         ## find separatrix and update psi limit
         p_z0 = np.array(list(map(Pfunc,r_z0)))
         psi_z0 = psi[z0_idx]
-        lim_idx = (i for i,p in enumerate(p_z0) if p == 0.0).next()
+        lim_idx = next((i for i,p in enumerate(p_z0) if p == 0.0))
         a = r_z0[lim_idx]
 
         ## Evaluate error between iterations and update counter
