@@ -61,18 +61,18 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
     r = np.array(list(r)+[r[0]])
     r = r[::-1]
     flpoints = np.vstack((z,r)).T
-    ax.plot(flpoints[:,0],flpoints[:,1],"bo")
-    ax.plot(flpoints[0,0],flpoints[0,1],"go")
-    ax.plot(flpoints[-1,0],flpoints[-1,1],"ro")
-    plt.show()
+#    ax.plot(flpoints[:,0],flpoints[:,1],"bo")
+#    ax.plot(flpoints[0,0],flpoints[0,1],"go")
+#    ax.plot(flpoints[-1,0],flpoints[-1,1],"ro")
+#    plt.show()
     fl_dist = get_fieldline_distance(flpoints)
     spl = UnivariateSpline(z,r,k=1,s=0)
     fl_spl = UnivariateSpline(fl_dist,z,k=1,s=0)
     uniform_s = np.linspace(fl_dist[0],fl_dist[-1],100)
     zlimit = fl_spl(uniform_s)
     rlimit = spl(zlimit)
-    ax.plot(r,z,"bo")
-    ax.plot(rlimit,zlimit,"ro")
+#    ax.plot(r,z,"bo")
+#    ax.plot(rlimit,zlimit,"ro")
     ## get contour for psi_ves boundary
     flpoints = get_fieldlines(cf,psi_ves,start_coord=(.05,.5),end_coord=(.05,-.5))
     r,z = flpoints[:,0],flpoints[:,1]
@@ -87,9 +87,9 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
     uniform_s = np.linspace(fl_dist[0],fl_dist[-1],100)
     zves = fl_spl(uniform_s)
     rves = spl(zves)
-    ax.plot(r,z,"yo")
-    ax.plot(rves,zves,"go")
-    plt.show()
+#    ax.plot(r,z,"yo")
+#    ax.plot(rves,zves,"go")
+#    plt.show()
 
     lim_ves_pairs = [loc for pair in zip(rlimit,zlimit) for loc in pair]+[loc for pair in zip(rves,zves) for loc in pair]
 
