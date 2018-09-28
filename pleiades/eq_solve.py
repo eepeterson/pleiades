@@ -15,7 +15,7 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
     r_z0 = r[z0_idx]
     dr = np.abs(R[0,1]-R[0,0])
     dz = np.abs(Z[1,0]-Z[0,0])
-    p_z0 = np.array(map(Pfunc,r_z0))
+    p_z0 = np.array(list(map(Pfunc,r_z0)))
     psi_z0 = psi[z0_idx]
     lim_idx = (i for i,p in enumerate(p_z0) if p == 0.0).next()
     a = r_z0[lim_idx]
@@ -35,10 +35,10 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
         if plotit:
             ## Plot P vs R, Psi vs R, P vs Psi and Pprime vs Psi
             fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,sharex="col")
-            ax1.plot(r_z0,map(Pfunc,r_z0),lw=2)
+            ax1.plot(r_z0,list(map(Pfunc,r_z0)),lw=2)
             ax1.set_ylabel("P (Pa)")
             psi_lin = np.linspace(psi_z0.min(),psi_z0.max(),1000)
-            ax2.plot(psi_z0,map(Pfunc,r_z0),"o")
+            ax2.plot(psi_z0,list(map(Pfunc,r_z0)),"o")
             ax2.plot(psi_z0,p_psifit(psi_z0),lw=2)
             ax2.plot(psi_lin,p_psifit(psi_lin),"k--",lw=2)
             ax2.set_ylabel("P (Pa)")
@@ -83,7 +83,7 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
         pprime_fit = p_psifit.derivative()
 
         ## find separatrix and update psi limit
-        p_z0 = np.array(map(Pfunc,r_z0))
+        p_z0 = np.array(list(map(Pfunc,r_z0)))
         psi_z0 = psi[z0_idx]
         lim_idx = (i for i,p in enumerate(p_z0) if p == 0.0).next()
         a = r_z0[lim_idx]
@@ -135,10 +135,10 @@ def mirror_equilibrium(brb,gplas,p0,alpha1,alpha2,tol=1E-10,maxiter=100,relax=0.
 #        if plotit:
 #            ## Plot P vs R, Psi vs R, P vs Psi and Pprime vs Psi
 #            fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,sharex="col")
-#            ax1.plot(r_z0,map(Pfunc,r_z0),lw=2)
+#            ax1.plot(r_z0,list(map(Pfunc,r_z0)),lw=2)
 #            ax1.set_ylabel("P (Pa)")
 #            psi_lin = np.linspace(psi_z0.min(),psi_z0.max(),1000)
-#            ax2.plot(psi_z0,map(Pfunc,r_z0),"o")
+#            ax2.plot(psi_z0,list(map(Pfunc,r_z0)),"o")
 #            ax2.plot(psi_z0,p_psifit(psi_z0),lw=2)
 #            ax2.plot(psi_lin,p_psifit(psi_lin),"k--",lw=2)
 #            ax2.set_ylabel("P (Pa)")
