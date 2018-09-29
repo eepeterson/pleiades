@@ -1,0 +1,620 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pleiades.helpers &#8212; pleiades 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pleiades.helpers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span><span class="p">,</span> <span class="n">interp2d</span><span class="p">,</span> <span class="n">RectBivariateSpline</span><span class="p">,</span><span class="n">UnivariateSpline</span><span class="p">,</span><span class="n">griddata</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">Delaunay</span><span class="p">,</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="k">import</span> <span class="n">LineCollection</span>
+<span class="c1">#import analysis.datahelpers as dh</span>
+
+<span class="k">def</span> <span class="nf">poly_fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">basis_fns</span> <span class="o">=</span> <span class="p">[(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="n">z</span><span class="o">**</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">basis_fns</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">vt</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">Sinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+    <span class="n">s</span><span class="p">[</span> <span class="n">s</span><span class="o">&lt;</span><span class="mf">1.0e-10</span> <span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">s</span><span class="p">[</span> <span class="n">s</span><span class="o">&gt;=</span><span class="mf">1.0e-10</span> <span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">s</span><span class="p">[</span> <span class="n">s</span><span class="o">&gt;=</span><span class="mf">1.0e-10</span><span class="p">]</span>
+    <span class="n">Sinv</span><span class="p">[:</span><span class="n">n</span><span class="p">,:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Sinv</span><span class="p">,</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vt</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">basis_fns</span><span class="p">,</span><span class="n">c</span>
+
+<div class="viewcode-block" id="reflect_and_hstack"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.reflect_and_hstack">[docs]</a><span class="k">def</span> <span class="nf">reflect_and_hstack</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reflect and concatenate grid and quantities in *args to plot both half planes (rho&gt;=0 and rho&lt;=0).</span>
+
+<span class="sd">    Note: Currently this function only reflects across the z axis since that is the symmetry convention</span>
+<span class="sd">        we&#39;ve taken for the machine.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Rho (2D array): rho grid</span>
+<span class="sd">        Z (2D array): z grid</span>
+<span class="sd">        *args (2D arrays), any quantity on this grid you wish to plot in both half planes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Rho_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="o">-</span><span class="n">Rho</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">Rho</span><span class="p">))</span>
+    <span class="n">Z_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">Z</span><span class="p">))</span>
+    <span class="n">arglist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">arg</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">Rho</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">arglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">arg</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">arg</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">Rho_total</span><span class="p">,</span><span class="n">Z_total</span><span class="p">)</span><span class="o">+</span><span class="nb">tuple</span><span class="p">(</span><span class="n">arglist</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">get_concave_hull</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">Q</span><span class="p">):</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">rho0</span><span class="p">,</span><span class="n">z0</span><span class="p">]</span> <span class="k">for</span> <span class="n">rho0</span><span class="p">,</span><span class="n">z0</span><span class="p">,</span><span class="n">q</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Rho</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span><span class="n">Z</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span><span class="n">Q</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="k">if</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">q</span><span class="p">)])</span>
+    <span class="n">tri</span> <span class="o">=</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+    <span class="c1"># Make a list of line segments: </span>
+    <span class="c1"># edge_points = [ ((x1_1, y1_1), (x2_1, y2_1)),</span>
+    <span class="c1">#                 ((x1_2, y1_2), (x2_2, y2_2)),</span>
+    <span class="c1">#                 ... ]</span>
+    <span class="n">edge_points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a line between the i-th and j-th points, if not in the list already&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span> <span class="ow">or</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="c1"># already added</span>
+            <span class="k">return</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">edge_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">[</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="p">])</span>
+
+    <span class="c1"># loop over triangles: </span>
+    <span class="c1"># ia, ib, ic = indices of corner points of the triangle</span>
+    <span class="k">for</span> <span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">,</span> <span class="n">ic</span> <span class="ow">in</span> <span class="n">tri</span><span class="o">.</span><span class="n">vertices</span><span class="p">:</span>
+        <span class="n">add_edge</span><span class="p">(</span><span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">)</span>
+        <span class="n">add_edge</span><span class="p">(</span><span class="n">ib</span><span class="p">,</span> <span class="n">ic</span><span class="p">)</span>
+        <span class="n">add_edge</span><span class="p">(</span><span class="n">ic</span><span class="p">,</span> <span class="n">ia</span><span class="p">)</span>
+
+    <span class="c1"># plot it: the LineCollection is just a (maybe) faster way to plot lots of</span>
+    <span class="c1"># lines at once</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">LineCollection</span><span class="p">(</span><span class="n">edge_points</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Delaunay triangulation&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="c1">#plt.plot(points[:,0], points[:,1], &#39;o&#39;, hold=1)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<div class="viewcode-block" id="transform_to_rtheta"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.transform_to_rtheta">[docs]</a><span class="k">def</span> <span class="nf">transform_to_rtheta</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">rho_component</span><span class="p">,</span><span class="n">z_component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform Rho Z grid and rho,z components of vector field to polar coordinates&quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Rho</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">Z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span><span class="n">Rho</span><span class="p">)</span>
+    <span class="n">sin_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
+    <span class="n">cos_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
+    <span class="n">r_component</span> <span class="o">=</span> <span class="n">rho_component</span><span class="o">*</span><span class="n">sin_t</span> <span class="o">+</span> <span class="n">z_component</span><span class="o">*</span><span class="n">cos_t</span>
+    <span class="n">theta_component</span> <span class="o">=</span> <span class="n">rho_component</span><span class="o">*</span><span class="n">cos_t</span> <span class="o">-</span> <span class="n">z_component</span><span class="o">*</span><span class="n">sin_t</span>
+    <span class="k">return</span> <span class="n">R</span><span class="p">,</span><span class="n">Theta</span><span class="p">,</span><span class="n">r_component</span><span class="p">,</span><span class="n">theta_component</span> </div>
+
+<div class="viewcode-block" id="transform_to_rhoz"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.transform_to_rhoz">[docs]</a><span class="k">def</span> <span class="nf">transform_to_rhoz</span><span class="p">(</span><span class="n">R</span><span class="p">,</span><span class="n">Theta</span><span class="p">,</span><span class="n">r_component</span><span class="p">,</span><span class="n">theta_component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform R Theta grid and r theta components of vector field to cylindrical coordinates&quot;&quot;&quot;</span>
+    <span class="n">Rho</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
+    <span class="n">rho_component</span> <span class="o">=</span> <span class="p">(</span><span class="n">r_component</span><span class="o">*</span><span class="n">Rho</span> <span class="o">+</span> <span class="n">theta_component</span><span class="o">*</span><span class="n">Z</span><span class="p">)</span><span class="o">/</span><span class="n">R</span>
+    <span class="n">z_component</span> <span class="o">=</span> <span class="p">(</span><span class="n">r_component</span><span class="o">*</span><span class="n">Z</span> <span class="o">-</span> <span class="n">theta_component</span><span class="o">*</span><span class="n">Rho</span><span class="p">)</span><span class="o">/</span><span class="n">R</span>
+    <span class="k">return</span> <span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">rho_component</span><span class="p">,</span><span class="n">z_component</span> </div>
+
+<div class="viewcode-block" id="locs_to_vals"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.locs_to_vals">[docs]</a><span class="k">def</span> <span class="nf">locs_to_vals</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">coord_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Picks values of field Q at desired coordinates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X (2D array): grid representing column coordinates of Q</span>
+<span class="sd">        Y (2D array): grid representing row coordinates of Q</span>
+<span class="sd">        Q (2D array): value of Q on grid</span>
+<span class="sd">        coord_list (list):list of tuples (x,y) for desired coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">coord_list</span><span class="p">:</span>
+        <span class="n">x0_idx</span><span class="p">,</span><span class="n">y0_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span><span class="o">-</span><span class="n">x</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Y</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">q_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Q</span><span class="p">[</span><span class="n">y0_idx</span><span class="p">,</span><span class="n">x0_idx</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">q_vals</span></div>
+
+<div class="viewcode-block" id="locs_to_vals_griddata"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.locs_to_vals_griddata">[docs]</a><span class="k">def</span> <span class="nf">locs_to_vals_griddata</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">coord_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Picks values of field Q at desired coordinates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X (2D array): grid representing column coordinates of Q</span>
+<span class="sd">        Y (2D array): grid representing row coordinates of Q</span>
+<span class="sd">        Q (2D array): value of Q on grid</span>
+<span class="sd">        coord_list (list):list of tuples (x,y) for desired coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xi</span><span class="p">,</span><span class="n">yi</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">coord_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">griddata</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span><span class="n">Y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="n">Q</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),(</span><span class="n">xi</span><span class="p">,</span><span class="n">yi</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="locs_to_vals1D"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.locs_to_vals1D">[docs]</a><span class="k">def</span> <span class="nf">locs_to_vals1D</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">coord_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Picks values of field Q at desired coordinates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X (2D array): grid representing column coordinates of Q</span>
+<span class="sd">        Y (2D array): grid representing row coordinates of Q</span>
+<span class="sd">        Q (2D array): value of Q on grid</span>
+<span class="sd">        coord_list (list):list of tuples (x,y) for desired coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">coord_list</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">((</span><span class="n">X</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Y</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+        <span class="n">q_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Q</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">q_vals</span></div>
+
+<div class="viewcode-block" id="get_fieldlines"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.get_fieldlines">[docs]</a><span class="k">def</span> <span class="nf">get_fieldlines</span><span class="p">(</span><span class="n">contourset</span><span class="p">,</span><span class="n">level</span><span class="p">,</span><span class="n">start_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">end_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">clockwise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">idx_check</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Return coordinates for segments comprising a flux surface (Nx2 array).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        contourset (matplotlib.contour.QuadContourSet instance): i.e.</span>
+<span class="sd">        ax.contour call</span>
+<span class="sd">        level (float): desired contour level</span>
+<span class="sd">        start_coord (tuple): coordinate (x,y) at which to start the field line</span>
+<span class="sd">        end_coord (tuple): coordinate (x,y) at which to end the field line</span>
+<span class="sd">        clockwise (bool): whether to order the field line coordinates clockwise or</span>
+<span class="sd">        counterclockwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">## Find desired flux surface and get its vertices</span>
+    <span class="k">assert</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">contourset</span><span class="o">.</span><span class="n">levels</span><span class="p">),</span> <span class="s2">&quot;level: </span><span class="si">{0}</span><span class="s2"> not found in contourset&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">contourset</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+    <span class="n">segs</span> <span class="o">=</span> <span class="n">contourset</span><span class="o">.</span><span class="n">allsegs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">len_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segs</span><span class="p">]</span>
+    <span class="n">max_idx</span> <span class="o">=</span> <span class="n">len_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">len_list</span><span class="p">))</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">parse_segment</span><span class="p">(</span><span class="n">segs</span><span class="p">[</span><span class="n">max_idx</span><span class="p">],</span><span class="n">start_coord</span><span class="o">=</span><span class="n">start_coord</span><span class="p">,</span><span class="n">end_coord</span><span class="o">=</span><span class="n">end_coord</span><span class="p">,</span><span class="n">clockwise</span><span class="o">=</span><span class="n">clockwise</span><span class="p">)</span>
+<span class="c1">#    if idx in idx_check:</span>
+<span class="c1">#        fig_pts,ax_pts = plt.subplots()</span>
+<span class="c1">#        fig_B,ax_B = plt.subplots()</span>
+<span class="c1">#        for i,pts in enumerate(segs):</span>
+<span class="c1">#            tmp_pts = parse_segment(pts,start_coord=start_coord,end_coord=end_coord,clockwise=clockwise)</span>
+<span class="c1">#            ax_pts.plot(tmp_pts[:,0],tmp_pts[:,1],&quot;o&quot;)</span>
+<span class="c1">#            ax_pts.plot(tmp_pts[0,0],tmp_pts[0,1],&quot;go&quot;)</span>
+<span class="c1">#            ax_pts.plot(tmp_pts[-1,0],tmp_pts[-1,1],&quot;ro&quot;)</span>
+<span class="c1">#            ax_pts.set_xlim(0,2.50)</span>
+<span class="c1">#            ax_pts.set_ylim(-1.25,1.25)</span>
+<span class="c1">#            ax_pts.set_aspect(1)</span>
+<span class="c1">#            B_interp = interp(Rho,Z,B,tmp_pts)</span>
+<span class="c1">#            s = get_fieldline_distance(tmp_pts)</span>
+<span class="c1">#            ax_B.plot(s,B_interp,&quot;o&quot;)</span>
+<span class="c1">#        plt.show()</span>
+    <span class="k">return</span> <span class="n">flpoints</span></div>
+
+<span class="k">def</span> <span class="nf">parse_segment</span><span class="p">(</span><span class="n">flpoints</span><span class="p">,</span><span class="n">start_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">end_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">clockwise</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">start_coord</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">i_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x0</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y0</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x0</span><span class="p">,</span><span class="n">y0</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">start_coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">start_coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])]))</span>
+        <span class="n">flpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">flpoints</span><span class="p">,</span><span class="o">-</span><span class="n">i_start</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1">## Find out if curve is cw or ccw</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">iscw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span><span class="o">+</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">clockwise</span> <span class="o">!=</span> <span class="n">iscw</span><span class="p">:</span>
+        <span class="n">flpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">flpoints</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,:],</span><span class="mi">1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">i_end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">end_coord</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">i_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x0</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y0</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x0</span><span class="p">,</span><span class="n">y0</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">end_coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">end_coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])]))</span>
+        <span class="k">if</span> <span class="n">i_end</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">i_end</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i_end</span><span class="p">,:]</span>
+    <span class="k">return</span> <span class="n">flpoints</span>
+
+<div class="viewcode-block" id="get_fieldline_distance"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.get_fieldline_distance">[docs]</a><span class="k">def</span> <span class="nf">get_fieldline_distance</span><span class="p">(</span><span class="n">flpoints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return cumulative field line distance vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">flpoints</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="interp"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.interp">[docs]</a><span class="k">def</span> <span class="nf">interp</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">flpoints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;interpolate quantity Q on Rho, Z grid onto flpoints (Nx2 array of x,y pairs).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">Rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span><span class="n">x0</span><span class="p">,</span><span class="n">Q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">yi</span><span class="p">,</span><span class="n">xi</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">xi</span><span class="p">,</span><span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])])</span></div>
+
+<div class="viewcode-block" id="flux_surface_avg"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.flux_surface_avg">[docs]</a><span class="k">def</span> <span class="nf">flux_surface_avg</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">flpoints</span><span class="p">,</span><span class="n">Q</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute flux surface average of quantity Q or return dVdpsi (dl_B)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">## Interpolate B and quantity Q onto flux line</span>
+    <span class="n">B_interp</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">flpoints</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">get_fieldline_distance</span><span class="p">(</span><span class="n">flpoints</span><span class="p">)</span>
+    <span class="n">dl_B</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">1.0</span><span class="o">/</span><span class="n">B_interp</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Q</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Q_interp</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">flpoints</span><span class="p">)</span>
+        <span class="n">fsa</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">dl_B</span><span class="o">*</span><span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">Q_interp</span><span class="o">/</span><span class="n">B_interp</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fsa</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dl_B</span></div>
+
+<span class="k">def</span> <span class="nf">diff_central</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">f</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="o">*</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+
+<span class="c1"># need to remove datahelpers dependency from this before using</span>
+<span class="c1">#def get_F(Rho,Z,psi,B,min_rho,max_rho,start_coord=None,end_coord=None,clockwise=True,plotit=False,dfl_tol=.1):</span>
+<span class="c1">#    gamma = 5.0/3.0</span>
+<span class="c1">#    figf,axf = plt.subplots()</span>
+<span class="c1">#    psi_min,psi_edge = locs_to_vals(Rho,Z,psi,[(min_rho,0),(max_rho,0)])</span>
+<span class="c1">#    psi_levels = np.linspace(psi_min,psi_edge,500)</span>
+<span class="c1">#    cff = axf.contour(Rho,Z,psi,tuple(psi_levels))</span>
+<span class="c1">#    dl_B_list = []</span>
+<span class="c1">#    for psi0 in psi_levels:</span>
+<span class="c1">#        if psi0 == 0.0:</span>
+<span class="c1">#            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=False)</span>
+<span class="c1">#        else:</span>
+<span class="c1">#            flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=clockwise)</span>
+<span class="c1">#        s = get_fieldline_distance(flpoints)</span>
+<span class="c1">#        if np.max(s[1:]-s[0:-1]) &gt; dfl_tol:</span>
+<span class="c1">#            raise ValueError(&quot;fieldline distance between successive points greater than dfl_tol: {0}m&quot;.format(dfl_tol))</span>
+<span class="c1">#        if plotit:</span>
+<span class="c1">#            x,y = flpoints[:,0],flpoints[:,1]</span>
+<span class="c1">#            axf.plot(x,y,&#39;bo&#39;)</span>
+<span class="c1">#            axf.plot(x[0],y[0],&#39;go&#39;)</span>
+<span class="c1">#            axf.plot(x[-1],y[-1],&#39;ro&#39;)</span>
+<span class="c1">#        dl_B_list.append(flux_surface_avg(Rho,Z,B,flpoints))</span>
+<span class="c1">#    psi_new = psi_levels</span>
+<span class="c1">#    dl_B_new = np.array(dl_B_list)</span>
+<span class="c1">#    dl_B_new = dh.smooth(dl_B_new,5,mode=&quot;valid&quot;)</span>
+<span class="c1">#    psi_new = dh.smooth(psi_new,5,mode=&quot;valid&quot;)</span>
+<span class="c1">#    U = UnivariateSpline(psi_new,dl_B_new,k=4,s=0)</span>
+<span class="c1">#    dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=1,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#    d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=1,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#    #dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=3,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#    #d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=3,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#    term1 = lambda x: gamma*x/U(x)*(dUdpsi(x))**2</span>
+<span class="c1">#    term2 = lambda x: dUdpsi(x) + x*d2Udpsi2(x)</span>
+<span class="c1">#    F = lambda x: term1(x) - term2(x)</span>
+<span class="c1">#    if plotit:</span>
+<span class="c1">#        z0_idx = np.abs(Z[:,0]).argmin()</span>
+<span class="c1">#        end_idx = np.abs(Rho[z0_idx,:]-max_rho).argmin()</span>
+<span class="c1">#        R_of_psi = UnivariateSpline(psi[z0_idx,0:end_idx],Rho[z0_idx,0:end_idx],s=0)</span>
+<span class="c1">#        psi_test = np.linspace(psi_min,psi_edge,1000)</span>
+<span class="c1">#        psi_norm = psi_test/psi_edge</span>
+<span class="c1">#        fig9,(ax9a,ax9b,ax9c) = plt.subplots(3,1,sharex=&quot;col&quot;)</span>
+<span class="c1">#        ax9a.plot(psi_new,dl_B_new,&quot;o&quot;)</span>
+<span class="c1">#        ax9a.plot(psi_test,U(psi_test),&quot;r&quot;)</span>
+<span class="c1">#        ax9b.plot(psi_new[1:-1],dUdpsi(psi_new[1:-1]),&quot;o&quot;)</span>
+<span class="c1">#        ax9b.plot(psi_test,dUdpsi(psi_test),&quot;r&quot;)</span>
+<span class="c1">#        ax9c.plot(psi_new[2:-2],d2Udpsi2(psi_new[2:-2]),&quot;o&quot;)</span>
+<span class="c1">#        ax9c.plot(psi_test,d2Udpsi2(psi_test),&quot;r&quot;)</span>
+<span class="c1">#        fig0,((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2,sharex=&quot;all&quot;,figsize=(18,9))</span>
+<span class="c1">#        ax0.plot(psi_new/psi_edge,dl_B_new,&quot;o&quot;)</span>
+<span class="c1">#        ax0.plot(psi_norm,U(psi_test),lw=2)</span>
+<span class="c1">#        ax0.set_ylabel(&quot;U&quot;)</span>
+<span class="c1">#        ax0top = ax0.twiny()</span>
+<span class="c1">#        new_labels = [&quot;{0:1.2f}&quot;.format(r) for r in R_of_psi(psi_edge*np.array(ax0.get_xticks()))]</span>
+<span class="c1">#        ax0top.set_xticklabels(new_labels)</span>
+<span class="c1">#        ax0top.set_xlabel(&quot;R (m)&quot;)</span>
+<span class="c1">#        ax1.plot(psi_norm,dUdpsi(psi_test),&#39;o&#39;)</span>
+<span class="c1">#        ax1.set_ylabel(&quot;U&#39;&quot;)</span>
+<span class="c1">#        ax1top = ax1.twiny()</span>
+<span class="c1">#        ax1top.set_xticklabels(new_labels)</span>
+<span class="c1">#        ax1top.set_xlabel(&quot;R (m)&quot;)</span>
+<span class="c1">#        ax2.plot(psi_norm,term1(psi_test),&#39;o&#39;)</span>
+<span class="c1">#        ax2.plot(psi_norm,term2(psi_test),&#39;o&#39;)</span>
+<span class="c1">#        ax2.set_xlabel(&quot;$\\psi/\\psi_{lim}$&quot;)</span>
+<span class="c1">#        ax2.set_ylabel(&quot;Term1 and term2&quot;)</span>
+<span class="c1">#        F_clean = dh.smooth(F(psi_test),20)</span>
+<span class="c1">#        ax3.plot(psi_norm,F_clean,lw=2)</span>
+<span class="c1">#        ax3.set_xlabel(&quot;$\\psi/\\psi_{lim}$&quot;)</span>
+<span class="c1">#        ax3.set_ylabel(&quot;F($\\psi$)&quot;)</span>
+<span class="c1">#        #ax3.set_ylim(-1.2,1.2)</span>
+<span class="c1">#        plt.tight_layout()</span>
+<span class="c1">#    return F</span>
+
+<span class="c1"># Added by Roger some simple check for field lines looping back on them selves</span>
+<span class="c1"># def get_F_v2(Rho,Z,psi,B,min_rho,max_rho,start_coord=None,end_coord=None,clockwise=True,plotit=False,plotdots=True,thresh=.2,num_psi=500):</span>
+<span class="c1">#     gamma = 5.0/3.0</span>
+<span class="c1">#     figf,axf = plt.subplots()</span>
+<span class="c1">#     psi_min,psi_edge = locs_to_vals(Rho,Z,psi,[(min_rho,0),(max_rho,0)])</span>
+<span class="c1">#     psi_levels = np.linspace(psi_min,psi_edge,num_psi)</span>
+<span class="c1">#     cff = axf.contour(Rho,Z,psi,tuple(psi_levels))</span>
+<span class="c1">#     dl_B_list = []</span>
+<span class="c1">#     for psi0 in psi_levels:</span>
+<span class="c1">#         if psi0 == 0.0:</span>
+<span class="c1">#             flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=False)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             flpoints = get_fieldlines(cff,psi0,start_coord=start_coord,end_coord=end_coord,clockwise=clockwise)</span>
+<span class="c1">#             if np.abs(flpoints[0][0]-start_coord[0]) &gt; thresh:</span>
+<span class="c1">#                 raise ValueError(&quot;I think some of these contours start after the separatrix.&quot;)</span>
+<span class="c1">#         if plotdots:</span>
+<span class="c1">#             x,y = flpoints[:,0],flpoints[:,1]</span>
+<span class="c1">#             axf.plot(x,y,&#39;bo&#39;)</span>
+<span class="c1">#             axf.plot(x[0],y[0],&#39;go&#39;)</span>
+<span class="c1">#             axf.plot(x[-1],y[-1],&#39;ro&#39;)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             plt.close()</span>
+<span class="c1">#         dl_B_list.append(flux_surface_avg(Rho,Z,B,flpoints))</span>
+<span class="c1">#     psi_new = psi_levels</span>
+<span class="c1">#     dl_B_new = np.array(dl_B_list)</span>
+<span class="c1">#     dl_B_new = dh.smooth(dl_B_new,5,mode=&quot;valid&quot;)</span>
+<span class="c1">#     psi_new = dh.smooth(psi_new,5,mode=&quot;valid&quot;)</span>
+<span class="c1">#     U = UnivariateSpline(psi_new,dl_B_new,k=4,s=0)</span>
+<span class="c1">#     dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=1,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#     d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=1,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#     #dUdpsi = UnivariateSpline(psi_new[1:-1],diff_central(psi_new,dl_B_new),k=3,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#     #d2Udpsi2 = UnivariateSpline(psi_new[2:-2],diff_central(psi_new[1:-1],diff_central(psi_new,dl_B_new)),k=3,s=0,ext=&quot;const&quot;)</span>
+<span class="c1">#     term1 = lambda x: gamma*x/U(x)*(dUdpsi(x))**2</span>
+<span class="c1">#     term2 = lambda x: dUdpsi(x) + x*d2Udpsi2(x)</span>
+<span class="c1">#     F = lambda x: term1(x) - term2(x)</span>
+<span class="c1">#     if plotit:</span>
+<span class="c1">#         z0_idx = np.abs(Z[:,0]).argmin()</span>
+<span class="c1">#         end_idx = np.abs(Rho[z0_idx,:]-max_rho).argmin()</span>
+<span class="c1">#         R_of_psi = UnivariateSpline(psi[z0_idx,0:end_idx],Rho[z0_idx,0:end_idx],s=0)</span>
+<span class="c1">#         psi_test = np.linspace(psi_min,psi_edge,1000)</span>
+<span class="c1">#         psi_norm = psi_test/psi_edge</span>
+<span class="c1">#         fig9,(ax9a,ax9b,ax9c) = plt.subplots(3,1,sharex=&quot;col&quot;)</span>
+<span class="c1">#         ax9a.plot(psi_new,dl_B_new,&quot;o&quot;)</span>
+<span class="c1">#         ax9a.plot(psi_test,U(psi_test),&quot;r&quot;)</span>
+<span class="c1">#         ax9b.plot(psi_new[1:-1],dUdpsi(psi_new[1:-1]),&quot;o&quot;)</span>
+<span class="c1">#         ax9b.plot(psi_test,dUdpsi(psi_test),&quot;r&quot;)</span>
+<span class="c1">#         ax9c.plot(psi_new[2:-2],d2Udpsi2(psi_new[2:-2]),&quot;o&quot;)</span>
+<span class="c1">#         ax9c.plot(psi_test,d2Udpsi2(psi_test),&quot;r&quot;)</span>
+<span class="c1">#         fig0,((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2,sharex=&quot;all&quot;,figsize=(18,9))</span>
+<span class="c1">#         ax0.plot(psi_new/psi_edge,dl_B_new,&quot;o&quot;)</span>
+<span class="c1">#         ax0.plot(psi_norm,U(psi_test),lw=2)</span>
+<span class="c1">#         ax0.set_ylabel(&quot;U&quot;)</span>
+<span class="c1">#         ax0top = ax0.twiny()</span>
+<span class="c1">#         new_labels = [&quot;{0:1.2f}&quot;.format(r) for r in R_of_psi(psi_edge*np.array(ax0.get_xticks()))]</span>
+<span class="c1">#         ax0top.set_xticklabels(new_labels)</span>
+<span class="c1">#         ax0top.set_xlabel(&quot;R (m)&quot;)</span>
+<span class="c1">#         ax1.plot(psi_norm,dUdpsi(psi_test),&#39;o&#39;)</span>
+<span class="c1">#         ax1.set_ylabel(&quot;U&#39;&quot;)</span>
+<span class="c1">#         ax1top = ax1.twiny()</span>
+<span class="c1">#         ax1top.set_xticklabels(new_labels)</span>
+<span class="c1">#         ax1top.set_xlabel(&quot;R (m)&quot;)</span>
+<span class="c1">#         ax2.plot(psi_norm,term1(psi_test),&#39;o&#39;)</span>
+<span class="c1">#         ax2.plot(psi_norm,term2(psi_test),&#39;o&#39;)</span>
+<span class="c1">#         ax2.set_xlabel(&quot;$\\psi/\\psi_{lim}$&quot;)</span>
+<span class="c1">#         ax2.set_ylabel(&quot;Term1 and term2&quot;)</span>
+<span class="c1">#         F_clean = dh.smooth(F(psi_test),20)</span>
+<span class="c1">#         ax3.plot(psi_norm,F_clean,lw=2)</span>
+<span class="c1">#         ax3.set_xlabel(&quot;$\\psi/\\psi_{lim}$&quot;)</span>
+<span class="c1">#         ax3.set_ylabel(&quot;F($\\psi$)&quot;)</span>
+<span class="c1">#         #ax3.set_ylim(-1.2,1.2)</span>
+<span class="c1">#         plt.tight_layout()</span>
+<span class="c1">#     return F</span>
+
+<span class="k">def</span> <span class="nf">write_eqdsk</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">psi</span><span class="p">,</span><span class="n">plas_currents</span><span class="p">,</span><span class="n">fname</span><span class="p">,</span><span class="n">title</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; cursign,nnr,nnz,nnv   = &quot;</span>
+    <span class="n">nnr</span><span class="p">,</span><span class="n">nnz</span><span class="p">,</span><span class="n">nnv</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])),</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])),</span><span class="mi">101</span>
+    <span class="n">rbox</span><span class="p">,</span><span class="n">zbox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">Rho</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">Rho</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+    <span class="n">tot_cur</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">plas_currents</span><span class="p">)</span>
+    <span class="n">cursign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">tot_cur</span><span class="p">)</span>
+    <span class="n">blank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nnv</span><span class="p">)</span>
+    <span class="n">limit_pairs</span><span class="p">,</span><span class="n">vessel_pairs</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span><span class="mi">100</span>
+    <span class="n">rho0_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+    <span class="c1">#### Plotting current and flux lines from plasma currents </span>
+    <span class="p">[</span><span class="n">psi_lim</span><span class="p">]</span> <span class="o">=</span> <span class="n">locs_to_vals</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">psi</span><span class="p">,[(</span><span class="o">.</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">)])</span>
+    <span class="n">psi_ves</span> <span class="o">=</span> <span class="n">psi_lim</span><span class="o">*</span><span class="mf">1.02</span>
+    <span class="n">psi_levels</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">psi_lim</span><span class="p">,</span><span class="n">psi_ves</span><span class="p">]))</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">psi</span><span class="p">,</span><span class="n">psi_levels</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1">## get contour for psi_lim boundary</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">get_fieldlines</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span><span class="n">psi_lim</span><span class="p">,</span><span class="n">start_coord</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">002</span><span class="p">,</span><span class="o">.</span><span class="mi">6</span><span class="p">),</span><span class="n">end_coord</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">002</span><span class="p">,</span><span class="o">-.</span><span class="mi">6</span><span class="p">))</span>
+    <span class="n">r</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="o">-</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">z</span><span class="p">,</span><span class="n">r</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">fl_dist</span> <span class="o">=</span> <span class="n">get_fieldline_distance</span><span class="p">(</span><span class="n">flpoints</span><span class="p">)</span>
+    <span class="n">spl</span> <span class="o">=</span> <span class="n">UnivariateSpline</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">fl_spl</span> <span class="o">=</span> <span class="n">UnivariateSpline</span><span class="p">(</span><span class="n">fl_dist</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">uniform_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fl_dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">fl_dist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">zlimit</span> <span class="o">=</span> <span class="n">fl_spl</span><span class="p">(</span><span class="n">uniform_s</span><span class="p">)</span>
+    <span class="n">rlimit</span> <span class="o">=</span> <span class="n">spl</span><span class="p">(</span><span class="n">zlimit</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="s2">&quot;bo&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rlimit</span><span class="p">,</span><span class="n">zlimit</span><span class="p">,</span><span class="s2">&quot;ro&quot;</span><span class="p">)</span>
+    <span class="c1">## get contour for psi_ves boundary</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">get_fieldlines</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span><span class="n">psi_ves</span><span class="p">,</span><span class="n">start_coord</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">002</span><span class="p">,</span><span class="o">.</span><span class="mi">6</span><span class="p">),</span><span class="n">end_coord</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">002</span><span class="p">,</span><span class="o">-.</span><span class="mi">6</span><span class="p">))</span>
+    <span class="n">r</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">flpoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">flpoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="o">-</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">flpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">z</span><span class="p">,</span><span class="n">r</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">fl_dist</span> <span class="o">=</span> <span class="n">get_fieldline_distance</span><span class="p">(</span><span class="n">flpoints</span><span class="p">)</span>
+    <span class="n">spl</span> <span class="o">=</span> <span class="n">UnivariateSpline</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">fl_spl</span> <span class="o">=</span> <span class="n">UnivariateSpline</span><span class="p">(</span><span class="n">fl_dist</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">uniform_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fl_dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">fl_dist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">zves</span> <span class="o">=</span> <span class="n">fl_spl</span><span class="p">(</span><span class="n">uniform_s</span><span class="p">)</span>
+    <span class="n">rves</span> <span class="o">=</span> <span class="n">spl</span><span class="p">(</span><span class="n">zves</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="s2">&quot;yo&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rves</span><span class="p">,</span><span class="n">zves</span><span class="p">,</span><span class="s2">&quot;go&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="n">lim_ves_pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">loc</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rlimit</span><span class="p">,</span><span class="n">zlimit</span><span class="p">)</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="n">loc</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rves</span><span class="p">,</span><span class="n">zves</span><span class="p">)</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="c1">## line 1 -- write grid information: cursign, nnr, nnz, nnv</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">title</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:4d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">cursign</span><span class="p">),</span><span class="n">nnr</span><span class="p">,</span><span class="n">nnz</span><span class="p">,</span><span class="n">nnv</span><span class="p">]))</span>
+        <span class="c1">## line 2 -- write rbox,zbox,0,0,0</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="p">[</span><span class="n">rbox</span><span class="p">,</span><span class="n">zbox</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="c1">## line 3 -- write 0,0,0,psi_lim,0</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">psi_lim</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="c1">## line 4 -- write total toroidal current,0,0,0,0</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="p">[</span><span class="n">tot_cur</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="c1">## line 5 -- write 0,0,0,0,0</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="c1">## line 6 -- write list of toroidal flux for each flux surface (zeros)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blank</span><span class="p">)))</span>
+        <span class="c1">## line 7 -- write list of pressure for each flux surface (zeros)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blank</span><span class="p">)))</span>
+        <span class="c1">## line 8 -- write list of (RBphi)&#39; for each flux surface (zeros)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blank</span><span class="p">)))</span>
+        <span class="c1">## line 9 -- write list of P&#39; for each flux surface (zeros)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blank</span><span class="p">)))</span>
+        <span class="c1">## line 10 -- write flattened list of psi values on whole grid (NOT ZERO)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">psi</span><span class="o">.</span><span class="n">flatten</span><span class="p">())))</span>
+        <span class="c1">## line 11 -- write list of q for each flux surface (zeros)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blank</span><span class="p">)))</span>
+        <span class="c1">## line 12 -- write number of coordinate pairs for limit surface and vessel surface</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0:5d}{1:5d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">limit_pairs</span><span class="p">,</span><span class="n">vessel_pairs</span><span class="p">)))</span>
+        <span class="c1">## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lim_ves_pairs</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="read_eqdsk"><a class="viewcode-back" href="../../helpers.html#pleiades.helpers.read_eqdsk">[docs]</a><span class="k">def</span> <span class="nf">read_eqdsk</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    line 1 -- read grid information: title cursign, nnr, nnz, nnv</span>
+<span class="sd">    line 2 -- read rbox,zbox,0,0,0</span>
+<span class="sd">    line 3 -- read 0,0,0,psi_lim,0</span>
+<span class="sd">    line 4 -- read total toroidal current,0,0,0,0</span>
+<span class="sd">    line 5 -- read 0,0,0,0,0</span>
+<span class="sd">    line 6 -- read list of toroidal flux for each flux surface (zeros)</span>
+<span class="sd">    line 7 -- read list of pressure for each flux surface (zeros)</span>
+<span class="sd">    line 8 -- read list of (RBphi)&#39; for each flux surface (zeros)</span>
+<span class="sd">    line 9 -- read list of P&#39; for each flux surface (zeros)</span>
+<span class="sd">    line 10 -- read flattened list of psi values on whole grid (NOT ZERO)</span>
+<span class="sd">    line 11 -- read list of q for each flux surface (zeros)</span>
+<span class="sd">    line 12 -- read number of coordinate pairs for limit surface and vessel surface</span>
+<span class="sd">    line 13 -- read list of R,Z pairs for limiter surface, then vessel surface</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eq_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">line1</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;cursign&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line1</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line1</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnz&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line1</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">line2</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;rbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line2</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;zbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line2</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">line3</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;psi_lim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line3</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">line4</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;Ip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line4</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">])</span>
+        <span class="n">line5</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">fs_lines</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnv&quot;</span><span class="p">]</span><span class="o">/</span><span class="mf">5.0</span><span class="p">))</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">5</span><span class="o">+</span><span class="n">fs_lines</span><span class="p">]]</span>
+        <span class="n">tor_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;tor_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tor_flux</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="o">+</span><span class="n">fs_lines</span><span class="p">:</span><span class="mi">5</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">fs_lines</span><span class="p">]]</span>
+        <span class="n">p_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;p_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_flux</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">fs_lines</span><span class="p">:</span><span class="mi">5</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">fs_lines</span><span class="p">]]</span>
+        <span class="n">rbphi_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;rbphi_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rbphi_flux</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">fs_lines</span><span class="p">:</span><span class="mi">5</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">fs_lines</span><span class="p">]]</span>
+        <span class="n">pprime_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;pprime_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pprime_flux</span>
+        <span class="c1"># Read psi on whole grid, nnr x nnz</span>
+        <span class="n">nnr</span><span class="p">,</span><span class="n">nnz</span> <span class="o">=</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnr&quot;</span><span class="p">],</span><span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnz&quot;</span><span class="p">]</span>
+        <span class="n">rz_pts</span> <span class="o">=</span> <span class="n">nnr</span><span class="o">*</span><span class="n">nnz</span>
+        <span class="n">l0</span> <span class="o">=</span> <span class="mi">5</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">fs_lines</span>
+        <span class="n">psi_lines</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">rz_pts</span><span class="o">/</span><span class="mf">5.0</span><span class="p">))</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l0</span><span class="p">:</span><span class="n">l0</span><span class="o">+</span><span class="n">psi_lines</span><span class="p">]]</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;psi&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">psi</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nnr</span><span class="p">,</span><span class="n">nnz</span><span class="p">))</span>
+        <span class="n">rbox</span><span class="p">,</span><span class="n">zbox</span> <span class="o">=</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;rbox&quot;</span><span class="p">],</span><span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;zbox&quot;</span><span class="p">]</span>
+        <span class="n">R</span><span class="p">,</span><span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rbox</span><span class="p">,</span><span class="n">nnr</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">zbox</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">zbox</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">nnz</span><span class="p">))</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Z</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l0</span><span class="o">+</span><span class="n">psi_lines</span><span class="p">:</span><span class="n">l0</span><span class="o">+</span><span class="n">psi_lines</span><span class="o">+</span><span class="n">fs_lines</span><span class="p">]]</span>
+        <span class="n">q_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">head</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;q_flux&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">q_flux</span>
+        <span class="n">nlim_pairs</span><span class="p">,</span> <span class="n">nves_pairs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l0</span><span class="o">+</span><span class="n">psi_lines</span><span class="o">+</span><span class="n">fs_lines</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nlim_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nlim_pairs</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nves_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nves_pairs</span>
+        <span class="n">pair_lines</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">nlim_pairs</span> <span class="o">+</span> <span class="n">nves_pairs</span><span class="p">)</span><span class="o">*</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">5.0</span><span class="p">))</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l0</span><span class="o">+</span><span class="n">psi_lines</span><span class="o">+</span><span class="n">fs_lines</span><span class="o">+</span><span class="mi">1</span><span class="p">:]]</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">),</span><span class="mi">16</span><span class="p">)]</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">num</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">])</span>
+        <span class="n">lim_pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nlim_pairs</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nlim_pairs</span><span class="p">:</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">ves_pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">nlim_pairs</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span><span class="n">pairs</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">nlim_pairs</span><span class="o">+</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;lim_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lim_pairs</span>
+        <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;ves_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ves_pairs</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">lim_pairs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ves_pairs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        
+
+
+        <span class="k">return</span> <span class="n">eq_dict</span></div>
+        
+        
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Ethan Peterson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

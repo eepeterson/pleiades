@@ -1,19 +1,18 @@
-""" This module is used for object oriented computation of axisymmetric magnetic fields.
+"""Example Google style docstrings.
 
-Written by: Ethan Peterson
-Contact info: ethan.peterson@wisc.edu
-Date: 05/02/2017
+This module demonstrates documentation as specified by the `Google Python
+Style Guide`_. Docstrings may extend over multiple lines. Sections are created
+with a section header and a colon followed by a block of indented text.
 
-Classes:
-    Current(object)
-    Magnet(object)
-    CurrentGroup(object)
-    MagnetGroup(object)
-    Component(object)
-    Configuration(object)
+Example:
+    Examples can be given using either the ``Example`` or ``Examples``
+    sections. Sections support any reStructuredText formatting, including
+    literal blocks::
 
-Methods:
-    get_greens(Rho,Z,current_tuples,nprocs=6)
+        $ python example_google.py
+
+Section breaks are created by resuming unindented text. Section breaks
+are also implicitly created anytime a new section starts.
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
 from numpy import pi,linspace,meshgrid,sin,cos,sqrt,sum,array,ones,zeros,hstack,vstack,sign,mod,isfinite,ceil,isclose
@@ -29,18 +28,19 @@ import pleiades.grids as grids
 import sys
 
 class Current(object):
-    """Represent an axisymmetric current loop for magnetic field modeling.
+    """Represents a loop of toroidal current.
+
+    Longer class information....
+    Longer class information....
+
     Attributes:
-        _loc
-        _current
-        marker
-    Properties:
-        loc
-        current
+        _loc: tuple (R,Z) indicating the current loop location (in meters). 
+        _current: A float value representing the current of the loop in Amps.
+        marker: A string used for plotting current direction "x" for "into the page", etc.
     Methods:
-        plot(ax,**kwargs)
-        to_dict()
-        from_dict(cls_dict) (class method)
+        plot:
+        to_dict:
+        from_dict:
     """
     def __init__(self,loc=None,current=1.0):
         self.current = current

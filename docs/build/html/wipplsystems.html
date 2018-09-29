@@ -1,0 +1,205 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Wipplsystems &#8212; pleiades 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="IO" href="io.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="wipplsystems">
+<h1>Wipplsystems<a class="headerlink" href="#wipplsystems" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-pleiades.wipplsystems"></span><dl class="class">
+<dt id="pleiades.wipplsystems.Dipole">
+<em class="property">class </em><code class="descclassname">pleiades.wipplsystems.</code><code class="descname">Dipole</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#Dipole"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.Dipole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal dipole Magnet comprised of 2 cylindrical SmCo magnets.</p>
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.Dipole.magnets">
+<code class="descname">magnets</code><a class="headerlink" href="#pleiades.wipplsystems.Dipole.magnets" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – list of Magnet objects comprising this instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.Dipole.patches">
+<code class="descname">patches</code><a class="headerlink" href="#pleiades.wipplsystems.Dipole.patches" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of matplotlib.patches.Polygon instances</em> – patches representing the vessel magnets</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pleiades.wipplsystems.PCX_HH">
+<em class="property">class </em><code class="descclassname">pleiades.wipplsystems.</code><code class="descname">PCX_HH</code><span class="sig-paren">(</span><em>t_current</em>, <em>b_current</em>, <em>fc='0.35'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#PCX_HH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH" title="Permalink to this definition">¶</a></dt>
+<dd><p>PCX Helmholtz coil set</p>
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.t_current">
+<code class="descname">t_current</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.t_current" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>double</em> – current through top HH coil</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.b_current">
+<code class="descname">b_current</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.b_current" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>double</em> – current through bottom HH coil</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.fc">
+<code class="descname">fc</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.fc" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – facecolor for patch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.top_coil">
+<code class="descname">top_coil</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.top_coil" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CurrentArray</em> – CurrentArray object for top coil</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.bot_coil">
+<code class="descname">bot_coil</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.bot_coil" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CurrentArray</em> – CurrentArray object for bottom coil</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.current_objs">
+<code class="descname">current_objs</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.current_objs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – list of Current objects comprising this instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_HH.patches">
+<code class="descname">patches</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_HH.patches" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of matplotlib.patches.Polygon instances</em> – patches representing the PCX HH coils</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pleiades.wipplsystems.PCX_magCage">
+<em class="property">class </em><code class="descclassname">pleiades.wipplsystems.</code><code class="descname">PCX_magCage</code><span class="sig-paren">(</span><em>current_mags=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#PCX_magCage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.PCX_magCage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represent an array of dipole magnets that comprise the PCX magnet cage.</p>
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_magCage.magnets">
+<code class="descname">magnets</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_magCage.magnets" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – list of Magnet objects comprising this instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pleiades.wipplsystems.PCX_magCage.patches">
+<code class="descname">patches</code><a class="headerlink" href="#pleiades.wipplsystems.PCX_magCage.patches" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of matplotlib.patches.Polygon instances</em> – patches representing the cage magnets</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pleiades.wipplsystems.PCX_magCage.get_current_tuples">
+<code class="descname">get_current_tuples</code><span class="sig-paren">(</span><em>frame='rhoz'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#PCX_magCage.get_current_tuples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.PCX_magCage.get_current_tuples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return computationally relevant info: list of (rho, z, current) tuples for instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pleiades.wipplsystems.PCX_magCage.set_strength">
+<code class="descname">set_strength</code><span class="sig-paren">(</span><em>current_mags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#PCX_magCage.set_strength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.PCX_magCage.set_strength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set strength of each magnet with 1D array current_mags</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pleiades.wipplsystems.TREXcoil">
+<em class="property">class </em><code class="descclassname">pleiades.wipplsystems.</code><code class="descname">TREXcoil</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#TREXcoil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.TREXcoil" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pleiades.wipplsystems.build_pcx">
+<code class="descclassname">pleiades.wipplsystems.</code><code class="descname">build_pcx</code><span class="sig-paren">(</span><em>vessel=True</em>, <em>HH=(False</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/wipplsystems.html#build_pcx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.wipplsystems.build_pcx" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Return field objects and patches representing PCX (modified copy of build_wipal).</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><p class="first">vessel (bool): boolean to include vessel magnets or not, default True
+HH (tuple): tuple of (bool,float,float) representing whether or not to include</p>
+<blockquote class="last">
+<div>helmholtz coil set and, if so, how much current goes into the upper and lower coil, respectively
+default (False,0,0)</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="io.html" title="previous chapter">IO</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/wipplsystems.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Ethan Peterson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/wipplsystems.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
