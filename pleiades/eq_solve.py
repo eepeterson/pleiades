@@ -32,7 +32,6 @@ def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,
     while Err > tol and k < maxiter:
         print(k)
         print(Err) 
-        print("test") 
         if plotit:
             ## Plot P vs R, Psi vs R, P vs Psi and Pprime vs Psi
             fig,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,sharex="col")
