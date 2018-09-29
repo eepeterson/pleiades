@@ -24,8 +24,6 @@ from matplotlib.transforms import Affine2D
 from numbers import Number
 import warnings
 import pickle
-import pleiades.grids as grids
-import sys
 
 class Current(object):
     """Represents a loop of toroidal current.

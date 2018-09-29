@@ -4,8 +4,6 @@ from scipy.special import ellipk, ellipe
 from multiprocessing import Process, Queue, cpu_count
 #import tables
 import warnings
-import pickle
-import sys
 
 def diff_12_central(x, y):
     x0 = x[:-2]
