@@ -43,9 +43,11 @@ class Current(object):
         from_dict:
     """
 
-    def __init__(self, loc=None, current=1.0):
+    def __init__(self, r, z, current):
+        self.r = r
+        self.z = z
         self.current = current
-        self.loc = loc
+        self.loc = (r,z)
 
     @property
     def loc(self):
