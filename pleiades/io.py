@@ -120,6 +120,51 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
         ## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface
         f.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(lim_ves_pairs)))
 
+def write_eqdsk_fromdict(eq_dict,fname):
+    title = eq_dict["title"]
+    cursign,nnr,nnz,nnv = eq_dict["cursign"], eq_dict["nnr"], eq_dict["nnz"], eq_dict["nnv"]
+    rbox,zbox = eq_dict["rbox"],eq_dict["zbox"]
+    psi_lim = eq_dict["psi_lim"]
+    Ip = eq_dict["Ip"]
+    p_flux = eq_dict["p_flux"]
+    tor_flux = eq_dict["tor_flux"] 
+    rbphi_flux = eq_dict["rbphi_flux"]
+    pprime_flux = eq_dict["pprime_flux"]
+    psi = eq_dict["psi"]
+    q_flux = eq_dict["q_flux"]
+    nlim_pairs = eq_dict["nlim_pairs"]
+    nves_pairs = eq_dict["nves_pairs"]
+    lim_pairs = eq_dict["lim_pairs"]
+    ves_pairs = eq_dict["ves_pairs"]
+    lim_ves_pairs = [loc for pair in lim_pairs for loc in pair] + [loc for pair in ves_pairs for loc in pair]
+    with open(fname,"w") as fh:
+        ## line 1 -- write grid information: cursign, nnr, nnz, nnv
+        fh.write(title+"".join("{:4d}".format(xi) for xi in [int(cursign),nnr,nnz,nnv]))
+        ## line 2 -- write rbox,zbox,0,0,0
+        fh.write("\n"+"".join("{: 16.9E}".format(xi) for xi in [rbox,zbox,0,0,0]))
+        ## line 3 -- write 0,0,0,psi_lim,0
+        fh.write("\n"+"".join("{: 16.9E}".format(xi) for xi in [0,0,0,psi_lim,0]))
+        ## line 4 -- write total toroidal current,0,0,0,0
+        fh.write("\n"+"".join("{: 16.9E}".format(xi) for xi in [Ip,0,0,0,0]))
+        ## line 5 -- write 0,0,0,0,0
+        fh.write("\n"+"".join("{: 16.9E}".format(xi) for xi in [0,0,0,0,0]))
+        ## line 6 -- write list of toroidal flux for each flux surface (zeros)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(tor_flux)))
+        ## line 7 -- write list of pressure for each flux surface (zeros)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(p_flux)))
+        ## line 8 -- write list of (RBphi)' for each flux surface (zeros)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(rbphi_flux)))
+        ## line 9 -- write list of P' for each flux surface (zeros)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(pprime_flux)))
+        ## line 10 -- write flattened list of psi values on whole grid (NOT ZERO)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(psi.flatten())))
+        ## line 11 -- write list of q for each flux surface (zeros)
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(q_flux)))
+        ## line 12 -- write number of coordinate pairs for limit surface and vessel surface
+        fh.write("\n"+"".join("{0:5d}{1:5d}".format(nlim_pairs,nves_pairs)))
+        ## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface
+        fh.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(lim_ves_pairs)))
+
 def read_eqdsk(filename):
     """
     line 1 -- read grid information: title cursign, nnr, nnz, nnv
@@ -139,11 +184,13 @@ def read_eqdsk(filename):
     eq_dict = {}
     with open(filename,"r") as f:
         lines = f.readlines()
-        line1 = lines[0].split()
-        eq_dict["cursign"] = int(line1[-4])
-        eq_dict["nnr"] = int(line1[-3])
-        eq_dict["nnz"] = int(line1[-2])
-        eq_dict["nnv"] = int(line1[-1])
+        line1 = lines[0]
+        eq_dict["title"] = line1[0:48]
+        line1rem = line1[48:]
+        eq_dict["cursign"] = int(line1rem.split()[-4])
+        eq_dict["nnr"] = int(line1rem.split()[-3])
+        eq_dict["nnz"] = int(line1rem.split()[-2])
+        eq_dict["nnv"] = int(line1rem.split()[-1])
         line2 = lines[1].split()
         eq_dict["rbox"] = float(line2[-5])
         eq_dict["zbox"] = float(line2[-4])
@@ -187,8 +234,8 @@ def read_eqdsk(filename):
         rest = [line.rstrip() for line in lines[l0+psi_lines+fs_lines+1:]]
         rest = [line[i:i+16] for line in rest for i in range(0,len(line),16)]
         pairs = np.array([float(num.strip()) for num in rest])
-        lim_pairs = np.array(zip(pairs[0:2*nlim_pairs:2],pairs[1:2*nlim_pairs:2]))
-        ves_pairs = np.array(zip(pairs[2*nlim_pairs::2],pairs[2*nlim_pairs+1::2]))
+        lim_pairs = np.array(list(zip(pairs[0:2*nlim_pairs:2],pairs[1:2*nlim_pairs:2])))
+        ves_pairs = np.array(list(zip(pairs[2*nlim_pairs::2],pairs[2*nlim_pairs+1::2])))
         eq_dict["lim_pairs"] = lim_pairs
         eq_dict["ves_pairs"] = ves_pairs
         print(lim_pairs.shape)
