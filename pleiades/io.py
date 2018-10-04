@@ -238,8 +238,6 @@ def read_eqdsk(filename):
         ves_pairs = np.array(list(zip(pairs[2*nlim_pairs::2],pairs[2*nlim_pairs+1::2])))
         eq_dict["lim_pairs"] = lim_pairs
         eq_dict["ves_pairs"] = ves_pairs
-        print(lim_pairs.shape)
-        print(ves_pairs.shape)
 
         return eq_dict
 
