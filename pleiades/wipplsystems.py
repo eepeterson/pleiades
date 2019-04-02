@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from pleiades.core import *
 import pleiades.grids
 import numpy as np
-from matplotlib.patches import Polygon,Wedge
+from matplotlib.patches import Polygon,Wedge,Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib as mpl
 import os
@@ -45,6 +45,38 @@ class TREXcoil(CurrentGroup):
         left,right = 2.00467, 2.00467 + .067083
         bottom, top = z0 - .105469, z0 + .105469
         return (np.array([[left,bottom],[left,top],[right,top],[right,bottom]]),)
+    
+class PCXCoil(CurrentGroup):
+    def __init__(self,**kwargs):
+        z0 = float(kwargs.pop("z0",0))
+        self._z0 = z0
+        Rarr = 0.759-7.5*0.00635 + np.arange(16)*0.00635
+        Zarr = z0-(2.5*0.00952+3*0.00635) + np.concatenate((np.array([0]),np.cumsum(np.tile([0.00635,0.00952],6)[0:-1])))
+        rz_pts = []
+        for r in Rarr:
+            for z in Zarr:
+                rz_pts.append((r,z))
+        rz_pts = np.array(rz_pts)
+        super_kwargs = {"rz_pts":rz_pts,"patchcls":Polygon,"fc":".35","ec":"k"}
+        super_kwargs.update(kwargs)
+        super(PCXCoil,self).__init__(**super_kwargs)
+        
+    @property
+    def z0(self):
+        return self._z0
+
+    @z0.setter
+    def z0(self,new_z0):
+        dz = new_z0 - self._z0
+        super(PCXCoil,self).translate((0,dz))
+        self._z0 = new_z0
+    
+    def build_patchargs(self,**kwargs):
+        z0 = self._z0
+        left,right = 0.759-7.5*0.00635,0.759+7.5*0.00635
+        bottom,top = z0 - (2.5*0.00952+3*0.00635), z0 + (2.5*0.00952+3*0.00635)
+        return (np.array([[left,bottom],[left,top],[right,top],[right,bottom]]),)
+        
 
 class TREXCoils(Component):
     def __init__(self,**kwargs):
@@ -63,6 +95,23 @@ class TREXCoils(Component):
         self.currents = currents
         self.nprocs = nprocs
         self.patch_mask = [0,0]
+        
+class PCXCoils(Component):
+    def __init__(self,**kwargs):
+        super(PCXCoils,self).__init__()
+        z0 = float(kwargs.pop("z0",0.375))
+        labels = kwargs.pop("labels",["TopCoil","BotCoil"])
+        currents = array(kwargs.pop("currents",(1,1)),dtype="float")
+        nprocs = kwargs.pop("nprocs",[4,4])
+        patch_mask = kwargs.pop("patch_mask",[0,0])
+        grid = kwargs.pop("grid",None)
+        TopCoil = PCXCoil(z0=z0,**kwargs)
+        BotCoil = PCXCoil(z0=-z0,**kwargs)
+        self.groups = [TopCoil,BotCoil]
+        self.labels = labels
+        self.currents = currents
+        self.nprocs = nprocs
+        self.patch_mask = patch_mask
 
 class LTRXCoils(ZSymmCoilSet):
     def __init__(self,**kwargs):
@@ -114,6 +163,60 @@ class VesselMagnets(Component):
         plist = [group.patches for group,mask in zip(self._groups,self._patch_mask) if not mask]
         return [p for sublist in plist for p in sublist]
 
+class PCXMagnets(Component):
+    def __init__(self,**kwargs):
+        super(PCXMagnets,self).__init__()
+        labels = kwargs.pop("labels",["TopSpider","Side","Ang","BotSpider"])
+        nprocs = kwargs.pop("nprocs",[4,7,1,4])
+        currents = kwargs.pop("currents",[1479.54]*4) #Calibrated by Ken 4/2/2019
+        patch_mask = kwargs.pop("patch_mask",[0,0,0,0])
+        height = 0.01905
+        width = 0.01905
+        ## Top Spider Group ##
+        zpts = 0.502*np.ones(8)
+        rpts = np.linspace(0.0413,0.4413,8)
+        rz_pts = np.vstack((rpts,zpts)).T
+        mu_hats = np.tile([180,0],4)
+        mTS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
+        for m_obj in mTS.obj_list:
+            m_obj.patchkwargs["fc"]=".35"
+        ## Side Group ##
+        rpts = 0.4531*np.ones(14)
+        zpts = np.linspace(-0.3393,0.4626,14)
+        rz_pts = np.vstack((rpts,zpts)).T
+        mu_hats = np.tile([270,90],7)
+        mS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
+        for m_obj in mS.obj_list:
+            m_obj.patchkwargs["fc"]=".35"
+        ## Angle Group ##
+        rpts = 0.4666 * np.ones(2)
+        zpts = np.array([-0.3671,0.4905])
+        mu_hats = np.array([135,225])
+        rz_pts = np.vstack((rpts,zpts)).T
+        mAN = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
+        mAN.obj_list[0].patchkwargs["fc"] = ".35"
+        mAN.obj_list[1].patchkwargs["fc"] = ".35"
+        ## Bottom Spider Group ##
+        zpts = -0.3790*np.ones(8)
+        rpts = np.linspace(0.0413,0.4413,8)
+        rz_pts = np.vstack((rpts,zpts)).T
+        mu_hats = np.tile([180,0],4)
+        mBS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
+        for m_obj in mBS.obj_list:
+            m_obj.patchkwargs["fc"]=".35"
+        #################
+        self.groups = [mTS,mS,mAN,mBS]
+        self.labels = labels
+        self.nprocs = nprocs
+        self.patch_mask = patch_mask
+        self.currents = currents
+        self.update_patches()
+        
+    @Component.patches.getter
+    def patches(self):
+        plist = [group.patches for group,mask in zip(self._groups,self._patch_mask) if not mask]
+        return [p for sublist in plist for p in sublist]       
+    
 class Dipole(Component):
     """Internal dipole Magnet comprised of 2 cylindrical SmCo magnets.
 
@@ -168,7 +271,18 @@ class BRB(Configuration):
 
     def add_sweep(self,center,r,theta1,theta2,width=None,**kwargs):
         self.patches.append(Wedge(center,r,theta1,theta2,width=width,**kwargs))
-
+        
+class PCX(Configuration):
+    def __init__(self,**kwargs):
+        super(PCX,self).__init__()
+        self.add_component(PCXCoils(),"HH")
+        self.add_component(PCXMagnets(),"mags")
+        self.grid = kwargs.pop("grid",None)
+        self.artists = [Rectangle((0.502,-0.454),.006,0.926,ec="None",fc=".35",zorder=100),
+                       Rectangle((0.502,0.472),0.057,0.178,ec="None",fc=".35",zorder=100),
+                       Wedge((0,0.3747),0.972,270,301.51,0.006,ec="None",fc=".35",zorder=100),
+                       Wedge((0,0.026),0.785,45,90,0.006,ec="None",fc=".35",zorder=100)]
+        
 class LTRX(Configuration):
     def __init__(self,**kwargs):
         super(LTRX,self).__init__()
@@ -183,124 +297,6 @@ class LTRX(Configuration):
 #        self.add_component(CoilPack(r0=.53,z0=5.3,nr=3,nz=6,dr=0.01,dz=0.01,fc=".35",ec="k"),"coil_10")
 
         self.grid = kwargs.pop("grid",None)
-
-
-
-class PCX_HH(object):
-    """PCX Helmholtz coil set
-
-    Attributes:
-        t_current (double): current through top HH coil
-        b_current (double): current through bottom HH coil
-        fc (str): facecolor for patch
-        top_coil (CurrentArray): CurrentArray object for top coil
-        bot_coil (CurrentArray): CurrentArray object for bottom coil
-        current_objs (list): list of Current objects comprising this instance
-        patches (list of matplotlib.patches.Polygon instances): patches representing the PCX HH coils
-        """
-
-    def __init__(self, t_current, b_current, fc='0.35'):
-        ## Build PCX HH coils
-        N=89. #number of windings (guess...)
-        self.t_current = t_current * N
-        self.b_current = b_current * N
-        self.fc = fc
-        R = 75.8825/100.
-        ztop = 38.03142/100.
-        zbot = -37.85616/100.
-        w = 10.795/100.
-        h = 10.16/100.
-        self.top_coil = Current((R, ztop), self.t_current, frame="rhoz", units="m")
-        self.bot_coil = Current((R, zbot), self.b_current, frame="rhoz", units="m")
-        self.current_objs = [self.top_coil, self.bot_coil]
-        top_coil_patch = Polygon([(R-w/2.,ztop-h/2.),(R-w/2., ztop+h/2.), (R+w/2., ztop+h/2.), (R+w/2., ztop-h/2.)],
-                                 closed=True, fc=self.fc, ec='k')
-        bot_coil_patch = Polygon([(R-w/2.,zbot-h/2.),(R-w/2., zbot+h/2.), (R+w/2., zbot+h/2.), (R+w/2., zbot-h/2.)],
-                                 closed=True, fc=self.fc, ec='k')
-        self.patches = [top_coil_patch, bot_coil_patch]
-
-    def get_current_objs(self):
-        return self.current_objs
-
-    def get_current_tuples(self, frame='rhoz', units='m'):
-        assert frame.lower() in ['polar', 'rhoz'], "Invalid frame choice: {0}".format(frame)
-        assert units.lower() in ['m', 'cm'], "Invalid units choice: {0}".format(units)
-        return [c_obj.get_current_tuples(frame=frame, units=units)[0] for c_obj in self.current_objs]
-
-
-class PCX_magCage(object):
-    """Represent an array of dipole magnets that comprise the PCX magnet cage.
-
-    Attributes:
-        magnets (list): list of Magnet objects comprising this instance
-        patches (list of matplotlib.patches.Polygon instances): patches representing the cage magnets
-    """
-
-    def __init__(self, current_mags=None):
-        ### Build the magnet array ###
-        height = 1.905  # cm
-        width = 1.905  # cm
-        # all positions relative to origin of the vessel, ref: gdrive sheet
-        # [TS1,TS2,TS3,TS4,TS5,TS6,TS7,TS8,TA,S14,S13,S12,S11,S10,S9,S8,S7,
-        #       S6,S5,S4,S3,S2,S1,BA,BS8,BS7,BS6,BS5,BS4,BS3,BS2,BS1]
-        R = np.array([4.1275, 9.8425, 15.5575, 21.2725, 26.9875, 32.7025, 38.4175, 44.1325, 46.6598, 46.25975, 46.25975,
-                      46.25975,46.25975, 46.25975, 46.25975, 46.25975, 46.25975, 46.25975, 46.25975, 46.25975, 46.25975,
-                      46.25975,46.25975, 46.6598, 44.1325, 38.4175, 32.7025, 26.9875, 21.2725, 15.5575, 9.8425, 4.1275])
-        Z = np.array([50.2335, 50.2335, 50.2335, 50.2335, 50.2335, 50.2335, 50.2335, 50.2335,49.0512,46.2645,40.0959,
-                      33.9273,27.7587,21.5901,15.4215,9.2529,3.0843,-3.0843,-9.2529,-15.4215,-21.5901,-27.7587,-33.9273,
-                      -36.7139,-37.8965,-37.8965,-37.8965,-37.8965,-37.8965,-37.8965,-37.8965,-37.8965])
-        muHats = np.array([180.,0.,180.,0.,180.,0.,180.,0.,135.,270.,90.,270.,90.,270.,90.,270.,90.,270.,90.,270.,90.,270.,
-                      90.,225.,0.,180.,0.,180.,0.,180.,0.,180.])
-        if current_mags == None:
-            current_mags = np.ones(10)
-            n = len(current_mags) / (height / 100.0)
-            ## MPDX strengths
-            current_mags *= .4 / (4 * np.pi * 10 ** -7 * n)
-            current_mags *= 3.3527
-        self.magnets = []
-        self.patches = []
-        for i, (r, z, h) in enumerate(zip(R, Z, muHats)):
-            if np.mod(i,2):
-                fc = "b"
-            else:
-                fc = "r"
-            m = Magnet((r, z), current_mags=current_mags, width=width, height=height, frame='rhoz', units="cm",
-                       mu_hat=h, fc= fc)
-            self.magnets.append(m)
-            self.patches.append(m.patch)
-
-    def set_strength(self, current_mags):
-        """Set strength of each magnet with 1D array current_mags"""
-        for m in self.magnets:
-            m.set_currents(current_mags)
-
-    def get_current_tuples(self, frame='rhoz', units='m'):
-        """Return computationally relevant info: list of (rho, z, current) tuples for instance."""
-        assert frame.lower() in ["polar", "rhoz"], "Invalid frame choice: {0}".format(frame)
-        assert units.lower() in ["m", "cm"], "Invalid units choice: {0}".format(units)
-        return [c_obj.get_current_tuples(frame=frame, units=units)[0] for c_obj in self.magnets]
-
-    def set_magnets(self, current_mags):
-        self.magnets = []
-        self.patches = []
-        self.current_mags = current_mags
-        for i, (r, zz, h) in enumerate(zip(self.r, self.z, self.muHats)):
-            if np.mod(i, 2):
-                fc = "r"
-            else:
-                fc = "b"
-            m = Magnet((r, zz), current_mags=current_mags, width=width, height=height, frame='rhoz',
-                       units='cm', mu_hat=h, fc=fc)
-            self.magnets.append(m)
-            self.patches.append(m.patch)
-
-    def set_strength(self, current_mags):
-        """Set strength of each magnet with 1D array current_mags"""
-        self.current_mags = current_mags
-        for m in self.magnets:
-            m.set_currents(current_mags)
-
-
 
 
 class PhilipsMRI(object):
@@ -322,29 +318,6 @@ class PhilipsMRI(object):
 
     def get_current_tuples(self,frame="rhoz",units="m"):
         return self.coil.get_current_tuples(frame=frame,units=units)
-
-def build_pcx(vessel=True, HH=(False, 0, 0)):
-    """"Return field objects and patches representing PCX (modified copy of build_wipal).
-
-    Kwargs:
-        vessel (bool): boolean to include vessel magnets or not, default True
-        HH (tuple): tuple of (bool,float,float) representing whether or not to include
-            helmholtz coil set and, if so, how much current goes into the upper and lower coil, respectively
-            default (False,0,0)
-    """
-    patches = []
-    current_objs = []
-    if vessel:
-        vessel_magnets = PCX_magCage()
-        current_objs.extend(vessel_magnets.magnets)
-        patches += vessel_magnets.patches
-    if HH[0]:
-        top_current = HH[1]
-        bot_current = HH[2]
-        hh_coils = PCX_HH(top_current, bot_current)
-        current_objs.extend(hh_coils.get_current_objs())
-        patches.extend(hh_coils.patches)
-    return current_objs, patches
 
 def build_gdt():
     rho0 = 40

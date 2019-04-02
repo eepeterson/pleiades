@@ -11,6 +11,47 @@ class StructuredGrid(Grid):
 class UnstructuredGrid(Grid):
     def __init__(self):
         pass
+    
+class LinearGrid(UnstructuredGrid):
+    def __init__(self, rpts, zpts):
+        self._R = array(rpts)
+        self._Z = array(zpts)
+        self._size = self._R.size
+        self._shape = self._R.shape
+        if self._shape != self._Z.shape:
+            raise ValueError('Rpts and Zpts are not same length')
+            
+    @property
+    def shape(self):
+        return self._shape
+    
+    @property
+    def size(self):
+        return self._size
+    
+    @property
+    def R(self):
+        return self._R
+    
+    @property
+    def R1D(self):
+        return self._R
+    
+    @property
+    def Z(self):
+        return self._Z
+    
+    @property
+    def Z1D(self):
+        return self._Z
+    
+    @property
+    def r(self):
+        return sqrt(self._R**2 + self._Z**2)
+    
+    @property
+    def theta(self):
+        return cos(self._Z/sqrt(self._R**2+self._Z**2))
 
 class PointsListGrid(UnstructuredGrid):
     def __init__(self,rpts,zpts):
