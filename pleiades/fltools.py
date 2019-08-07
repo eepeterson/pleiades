@@ -65,7 +65,10 @@ class FieldLine(object):
         bhatr, bhatz = BR/modB, BZ/modB
         bhatr_terp = self.interpolate_onto(R,Z,bhatr)
         bhatz_terp = self.interpolate_onto(R,Z,bhatz)
-        signb = np.sign(self.verts[0,0]*bhatr_terp[0] + self.verts[0,1]*bhatz_terp[0])
+        for i in range(self.verts.shape[0]):
+            signb = np.sign(self.verts[i,0]*bhatr_terp[i] + self.verts[i,1]*bhatz_terp[i])
+            if np.isfinite(signb):
+                break
         kap_r, kap_z = signb*self.d_ds(bhatr_terp), signb*self.d_ds(bhatz_terp)
         return np.vstack((kap_r,kap_z)).T
 
