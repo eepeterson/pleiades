@@ -63,8 +63,8 @@ class FieldLine(object):
     def get_kappa_n(self,R,Z,BR,BZ,method="cubic"):
         modB = np.sqrt(BR**2+BZ**2)
         bhatr, bhatz = BR/modB, BZ/modB
-        bhatr_terp = self.interpolate_onto(R,Z,bhatr)
-        bhatz_terp = self.interpolate_onto(R,Z,bhatz)
+        bhatr_terp = self.interpolate_onto(R,Z,bhatr,method=method)
+        bhatz_terp = self.interpolate_onto(R,Z,bhatz,method=method)
         for i in range(self.verts.shape[0]):
             signb = np.sign(self.verts[i,0]*bhatr_terp[i] + self.verts[i,1]*bhatz_terp[i])
             if np.isfinite(signb):
@@ -81,8 +81,8 @@ class FieldLine(object):
         return res
 
     def get_gradpsi(self,R,Z,BR,BZ,method="cubic"):
-        gradpsi_r = self.interpolate_onto(R,Z,R*BZ)
-        gradpsi_z = -self.interpolate_onto(R,Z,R*BR)
+        gradpsi_r = self.interpolate_onto(R,Z,R*BZ,method=method)
+        gradpsi_z = -self.interpolate_onto(R,Z,R*BR,method=method)
         return gradpsi_r,gradpsi_z
 
     def intersection(self,boundary):
