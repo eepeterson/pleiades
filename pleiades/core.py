@@ -1151,6 +1151,14 @@ class Configuration(object):
             comp.grid = grid
 
     @property
+    def R(self):
+        return self._grid.R
+
+    @property
+    def Z(self):
+        return self._grid.Z
+
+    @property
     def psi(self):
         return sum([comp.psi for comp in self.components], axis=0)
 
