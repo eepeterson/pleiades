@@ -173,32 +173,32 @@ class PCXMagnets(Component):
         height = 0.01905
         width = 0.01905
         ## Top Spider Group ##
-        zpts = 0.502*np.ones(8)
-        rpts = np.linspace(0.0413,0.4413,8)
+        zpts = 0.50233413*np.ones(8)
+        rpts = np.arange(0.041275,0.45,0.05715)
         rz_pts = np.vstack((rpts,zpts)).T
         mu_hats = np.tile([180,0],4)
         mTS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
         for m_obj in mTS.obj_list:
             m_obj.patchkwargs["fc"]=".35"
         ## Side Group ##
-        rpts = 0.4531*np.ones(14)
-        zpts = np.linspace(-0.3393,0.4626,14)
+        rpts = 0.4625975*np.ones(14)
+        zpts = np.linspace(-0.33927542,0.47,0.06168644)
         rz_pts = np.vstack((rpts,zpts)).T
         mu_hats = np.tile([270,90],7)
         mS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
         for m_obj in mS.obj_list:
             m_obj.patchkwargs["fc"]=".35"
         ## Angle Group ##
-        rpts = 0.4666 * np.ones(2)
-        zpts = np.array([-0.3671,0.4905])
+        rpts = 0.46659800 * np.ones(2)
+        zpts = np.array([-0.36713922,0.4905121])
         mu_hats = np.array([135,225])
         rz_pts = np.vstack((rpts,zpts)).T
         mAN = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
         mAN.obj_list[0].patchkwargs["fc"] = ".35"
         mAN.obj_list[1].patchkwargs["fc"] = ".35"
         ## Bottom Spider Group ##
-        zpts = -0.3790*np.ones(8)
-        rpts = np.linspace(0.0413,0.4413,8)
+        zpts = -0.37896125*np.ones(8)
+        rpts = np.arange(0.041275,0.45,0.05715)
         rz_pts = np.vstack((rpts,zpts)).T
         mu_hats = np.tile([180,0],4)
         mBS = MagnetGroup(rz_pts=rz_pts,mu_hats=mu_hats,height=height,width=width,**kwargs)
