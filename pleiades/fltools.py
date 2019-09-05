@@ -37,17 +37,22 @@ class FieldLine(object):
         return splev(u,self.tck,der=0)
 
     def reorder_verts(self,steptol=0.1):
+        print("reordering verts...")
         if not self.is_closed():
+            print("Entered if statement...")
 #            #old code
 #            istart = np.argmin(self.verts[:,0])
 #            tmpvert = np.roll(self.verts,-istart,axis=0)
 #            if (tmpvert[1,1]-tmpvert[0,1])**2 + (tmpvert[1,0]-tmpvert[0,0])**2 > steptol**2:
 #                tmpvert = np.roll(tmpvert,-1,axis=0)[::-1,:]
 #            self.verts = tmpvert
-            jumpidx = np.nanargmax(np.sum((self.verts[1:,:]-self.verts[0:-1,:])**2,axis=1)) + 1
+            vertdiffs = np.empty_like(self.verts[:,0])
+            vertdiffs[1:] = np.sum((self.verts[1:,:]-self.verts[0:-1,:])**2,axis=1)
+            vertdiffs[0] = np.sum((self.verts[0,:] - self.verts[-1,:])**2)
+            jumpidx = np.nanargmax(vertdiffs)
             self.verts = np.roll(self.verts,-jumpidx,axis=0)
-            if self.verts[-1,1] < self.verts[0,-1]:
-                self.verts = self.verts[::-1,:]
+#            if self.verts[-1,1] < self.verts[0,-1]:
+#                self.verts = self.verts[::-1,:]
 
     def get_svec(self):
         s = np.zeros(self.verts.shape[0])
