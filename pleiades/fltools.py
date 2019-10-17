@@ -5,17 +5,17 @@ from scipy.interpolate import splprep,splev
 from scipy.optimize import fmin
 
 class FieldLineSet(object):
-    def __init__(self,contourset):
+    def __init__(self,contourset,**kwargs):
         self.flset = {}
         for ilev,lev in enumerate(contourset.levels):
-            fllist = [FieldLine(lev,seg) for seg in contourset.allsegs[ilev]]
+            fllist = [FieldLine(lev,seg,**kwargs) for seg in contourset.allsegs[ilev]]
             self.flset[lev] = fllist 
 
 class FieldLine(object):
-    def __init__(self,psi,verts):
+    def __init__(self,psi,verts,**kwargs):
         self.psi = psi
         self._verts = verts
-        self._interpolate_verts()
+        self._interpolate_verts(**kwargs)
         self.reorder_verts()
 
     def is_closed(self):
@@ -37,9 +37,7 @@ class FieldLine(object):
         return splev(u,self.tck,der=0)
 
     def reorder_verts(self,steptol=0.1):
-        print("reordering verts...")
         if not self.is_closed():
-            print("Entered if statement...")
 #            #old code
 #            istart = np.argmin(self.verts[:,0])
 #            tmpvert = np.roll(self.verts,-istart,axis=0)
@@ -68,7 +66,9 @@ class FieldLine(object):
         return np.sqrt((r[1]-r[0])**2+(z[1]-z[0])**2)
 
     def interpolate_onto(self,R,Z,Q,method="cubic"):
-        return griddata((R.ravel(),Z.ravel()),Q.ravel(),xi=(self.verts[:,0],self.verts[:,1]),method=method)
+        idx = np.isfinite(Q.ravel())
+        r, z, q = R.ravel()[idx], Z.ravel()[idx], Q.ravel()[idx]
+        return griddata((r,z),q,xi=(self.verts[:,0],self.verts[:,1]),method=method)
 
     def get_kappa_n(self,R,Z,BR,BZ,method="cubic"):
         modB = np.sqrt(BR**2+BZ**2)
@@ -81,6 +81,19 @@ class FieldLine(object):
                 break
         kap_r, kap_z = signb*self.d_ds(bhatr_terp), signb*self.d_ds(bhatz_terp)
         return np.vstack((kap_r,kap_z)).T
+    
+    def get_kappa_n_2(self,R,Z,psi,method="cubic"):
+        ### requires regular rz grid
+        dx, dz = R[0,1] - R[0,0], Z[1,0] - Z[0,0]
+        dpsidz, dpsidr = np.gradient(psi,dz,dx)
+        modgpsi = np.sqrt(dpsidr**2 + dpsidz**2)
+        gz1, gr1 = np.gradient(-1.0/modgpsi*dpsidz,dz,dx)
+        gz2, gr2 = np.gradient(1.0/modgpsi*dpsidr,dz,dx)
+        kap_r = 1.0/modgpsi*(dpsidr*gz1 - dpsidz*gr1)
+        kap_z = 1.0/modgpsi*(dpsidr*gz2 - dpsidz*gr2)
+        kapr_terp = self.interpolate_onto(R,Z,kap_r,method=method)
+        kapz_terp = self.interpolate_onto(R,Z,kap_z,method=method)
+        return np.vstack((kapr_terp,kapz_terp)).T
 
     def d_ds(self,Q):
         ds = self.get_ds()
