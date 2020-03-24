@@ -1,22 +1,5 @@
-"""Example Google style docstrings.
-
-This module demonstrates documentation as specified by the `Google Python
-Style Guide`_. Docstrings may extend over multiple lines. Sections are created
-with a section header and a colon followed by a block of indented text.
-
-Example:
-    Examples can be given using either the ``Example`` or ``Examples``
-    sections. Sections support any reStructuredText formatting, including
-    literal blocks::
-
-        $ python example_google.py
-
-Section breaks are created by resuming unindented text. Section breaks
-are also implicitly created anytime a new section starts.
-"""
-from __future__ import print_function, division, absolute_import, unicode_literals
-from numpy import pi, linspace, meshgrid, sin, cos, sqrt, sum, array, ones, zeros, hstack, vstack, sign, mod, isfinite, \
-    ceil, isclose
+from numpy import (pi, linspace, meshgrid, sin, cos, sqrt, sum, array, ones,
+                   zeros, hstack, vstack, sign, mod, isfinite, ceil, isclose)
 from scipy.special import ellipk, ellipe
 from multiprocessing import Process, Queue, cpu_count
 from matplotlib.patches import Polygon
@@ -28,21 +11,26 @@ import pickle
 
 
 class Current(object):
-    """Represents a loop of toroidal current.
+    """Represents an axisymmetric ring of toroidal current.
 
-    Longer class information....
-    Longer class information....
+    Parameters
+    ----------
+    loc : tuple of (R, Z) centroid, optional
+        The location of the current centroid in meters. Defaults to None
+    current : float, optional
+        The current in the ring in amps, defaults to 1 amp.
 
-    Attributes:
-        _loc: tuple (R,Z) indicating the current loop location (in meters). 
-        _current: A float value representing the current of the loop in Amps.
-        marker: A string used for plotting current direction "x" for "into the page", etc.
-    Methods:
-        plot:
-        to_dict:
-        from_dict:
+    Attributes
+    ----------
+    loc : tuple of (R, Z) centroid, optional
+        The location of the current centroid in meters. Defaults to None
+    current : float, optional
+        The current in the ring in amps, defaults to 1 amp.
+    marker : str
+        A matplotlib marker string forplotting current direction "x" for "into
+        the page", etc.
+
     """
-
     def __init__(self, loc=None, current=1.0):
         self.current = current
         self.loc = loc

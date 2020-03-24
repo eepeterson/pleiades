@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 from pleiades.core import *
 import pleiades.grids
 import numpy as np

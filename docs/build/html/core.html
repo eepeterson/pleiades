@@ -1,99 +1,195 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Core &#8212; pleiades 0.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Core &mdash; SPARCnx Documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"></script>
+        <script type="text/javascript" src="_static/katex_autorenderer.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/katex-math.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Grids" href="grids.html" />
-    <link rel="prev" title="Welcome to pleiades’s documentation!" href="index.html" />
+    <link rel="prev" title="Examples" href="examples/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
-  </head><body>
-  
+          
+            <a href="index.html" class="icon icon-home"> pleiades
+          
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grids.html">Grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eq_solve.html">Eq_solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.html">Math</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">IO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wipplsystems.html">Wipplsystems</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pleiades</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Core</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/core.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-pleiades.core">
 <span id="core"></span><h1>Core<a class="headerlink" href="#module-pleiades.core" title="Permalink to this headline">¶</a></h1>
-<p>Example Google style docstrings.</p>
-<p>This module demonstrates documentation as specified by the <a href="#id1"><span class="problematic" id="id2">`Google Python
-Style Guide`_</span></a>. Docstrings may extend over multiple lines. Sections are created
-with a section header and a colon followed by a block of indented text.</p>
-<p class="rubric">Example</p>
-<p>Examples can be given using either the <code class="docutils literal notranslate"><span class="pre">Example</span></code> or <code class="docutils literal notranslate"><span class="pre">Examples</span></code>
-sections. Sections support any reStructuredText formatting, including
-literal blocks:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python example_google.py
-</pre></div>
-</div>
-<p>Section breaks are created by resuming unindented text. Section breaks
-are also implicitly created anytime a new section starts.</p>
 <dl class="class">
 <dt id="pleiades.core.Current">
-<em class="property">class </em><code class="descclassname">pleiades.core.</code><code class="descname">Current</code><span class="sig-paren">(</span><em>loc=None</em>, <em>current=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents a loop of toroidal current.</p>
-<p>Longer class information….
-Longer class information….</p>
-<dl class="attribute">
-<dt id="pleiades.core.Current._loc">
-<code class="descname">_loc</code><a class="headerlink" href="#pleiades.core.Current._loc" title="Permalink to this definition">¶</a></dt>
-<dd><p>tuple (R,Z) indicating the current loop location (in meters).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.Current._current">
-<code class="descname">_current</code><a class="headerlink" href="#pleiades.core.Current._current" title="Permalink to this definition">¶</a></dt>
-<dd><p>A float value representing the current of the loop in Amps.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.Current.marker">
-<code class="descname">marker</code><a class="headerlink" href="#pleiades.core.Current.marker" title="Permalink to this definition">¶</a></dt>
-<dd><p>A string used for plotting current direction “x” for “into the page”, etc.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pleiades.core.Current.plot">
-<code class="descname">plot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current.plot" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pleiades.core.Current.to_dict">
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<em class="property">class </em><code class="sig-prename descclassname">pleiades.core.</code><code class="sig-name descname">Current</code><span class="sig-paren">(</span><em class="sig-param">loc=None</em>, <em class="sig-param">current=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an axisymmetric ring of toroidal current.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loc</strong> (<em>tuple of</em><em> (</em><em>R</em><em>, </em><em>Z</em><em>) </em><em>centroid</em><em>, </em><em>optional</em>) – The location of the current centroid in meters. Defaults to None</p></li>
+<li><p><strong>current</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The current in the ring in amps, defaults to 1 amp.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>loc</strong> (<em>tuple of</em><em> (</em><em>R</em><em>, </em><em>Z</em><em>) </em><em>centroid</em><em>, </em><em>optional</em>) – The location of the current centroid in meters. Defaults to None</p></li>
+<li><p><strong>current</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The current in the ring in amps, defaults to 1 amp.</p></li>
+<li><p><strong>marker</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – A matplotlib marker string forplotting current direction “x” for “into
+the page”, etc.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
 <dt id="pleiades.core.Current.from_dict">
-<code class="descname">from_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt>
-<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>cls_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.from_dict"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">cls_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current.from_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create Current instance from a dictionary</p>
 </dd></dl>
 
 <dl class="method">
-<dt>
-<code class="descname">plot</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.plot"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="pleiades.core.Current.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">ax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Current.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Current.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot current locations with markers for +/-</p>
 </dd></dl>
 
@@ -101,57 +197,20 @@ Longer class information….</p>
 
 <dl class="class">
 <dt id="pleiades.core.CurrentArray">
-<em class="property">class </em><code class="descclassname">pleiades.core.</code><code class="descname">CurrentArray</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentArray" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pleiades.core.</code><code class="sig-name descname">CurrentArray</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>blah blah blah
-.. attribute:: _loc</p>
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._current">
-<code class="descname">_current</code><a class="headerlink" href="#pleiades.core.CurrentArray._current" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._nr">
-<code class="descname">_nr</code><a class="headerlink" href="#pleiades.core.CurrentArray._nr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._nz">
-<code class="descname">_nz</code><a class="headerlink" href="#pleiades.core.CurrentArray._nz" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._dr">
-<code class="descname">_dr</code><a class="headerlink" href="#pleiades.core.CurrentArray._dr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._dz">
-<code class="descname">_dz</code><a class="headerlink" href="#pleiades.core.CurrentArray._dz" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._angle">
-<code class="descname">_angle</code><a class="headerlink" href="#pleiades.core.CurrentArray._angle" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._patchcls">
-<code class="descname">_patchcls</code><a class="headerlink" href="#pleiades.core.CurrentArray._patchcls" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._patchargs_dict">
-<code class="descname">_patchargs_dict</code><a class="headerlink" href="#pleiades.core.CurrentArray._patchargs_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentArray._patchkwargs">
-<code class="descname">_patchkwargs</code><a class="headerlink" href="#pleiades.core.CurrentArray._patchkwargs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="docutils">
-<dt>Properties:</dt>
-<dd>loc
+:ivar ~CurrentArray._loc:
+:ivar ~CurrentArray._current:
+:ivar ~CurrentArray._nr:
+:ivar ~CurrentArray._nz:
+:ivar ~CurrentArray._dr:
+:ivar ~CurrentArray._dz:
+:ivar ~CurrentArray._angle:
+:ivar ~CurrentArray._patchcls:
+:ivar ~CurrentArray._patchargs_dict:
+:ivar ~CurrentArray._patchkwargs:</p>
+<dl class="simple">
+<dt>Properties:</dt><dd><p>loc
 current
 nr
 nz
@@ -160,115 +219,91 @@ dz
 angle
 patchcls
 patchargs_dict
-patchkwargs</dd>
+patchkwargs</p>
+</dd>
 </dl>
 <dl class="method">
 <dt id="pleiades.core.CurrentArray.build_patchargs">
-<code class="descname">build_patchargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentArray.build_patchargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentArray.build_patchargs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_patchargs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentArray.build_patchargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentArray.build_patchargs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="pleiades.core.CurrentGroup">
-<em class="property">class </em><code class="descclassname">pleiades.core.</code><code class="descname">CurrentGroup</code><span class="sig-paren">(</span><em>rz_pts=None</em>, <em>current=1.0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pleiades.core.</code><code class="sig-name descname">CurrentGroup</code><span class="sig-paren">(</span><em class="sig-param">rz_pts=None</em>, <em class="sig-param">current=1.0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Grouping of Current objects
-.. attribute:: _obj_list</p>
-<dl class="attribute">
-<dt id="pleiades.core.CurrentGroup._current">
-<code class="descname">_current</code><a class="headerlink" href="#pleiades.core.CurrentGroup._current" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentGroup.patchcls">
-<code class="descname">patchcls</code><a class="headerlink" href="#pleiades.core.CurrentGroup.patchcls" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentGroup.patchargs_dict">
-<code class="descname">patchargs_dict</code><a class="headerlink" href="#pleiades.core.CurrentGroup.patchargs_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentGroup.patchkwargs">
-<code class="descname">patchkwargs</code><a class="headerlink" href="#pleiades.core.CurrentGroup.patchkwargs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pleiades.core.CurrentGroup._patch">
-<code class="descname">_patch</code><a class="headerlink" href="#pleiades.core.CurrentGroup._patch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="docutils">
-<dt>Properties:</dt>
-<dd>obj_list
+:ivar ~CurrentGroup._obj_list:
+:ivar ~CurrentGroup._current:
+:ivar ~CurrentGroup.patchcls:
+:ivar ~CurrentGroup.patchargs_dict:
+:ivar ~CurrentGroup.patchkwargs:
+:ivar ~CurrentGroup._patch:</p>
+<dl class="simple">
+<dt>Properties:</dt><dd><p>obj_list
 current
 rzdir
 patchcls
 patchargs_dict
 patchkwargs
-patch</dd>
+patch</p>
+</dd>
 </dl>
 <dl class="method">
 <dt id="pleiades.core.CurrentGroup.build_patchargs">
-<code class="descname">build_patchargs</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.build_patchargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.build_patchargs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_patchargs</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.build_patchargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.build_patchargs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.CurrentGroup.update_patch">
-<code class="descname">update_patch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.update_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.update_patch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_patch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.update_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.update_patch" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.CurrentGroup.plot_currents">
-<code class="descname">plot_currents</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.plot_currents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.plot_currents" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_currents</code><span class="sig-paren">(</span><em class="sig-param">ax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.plot_currents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.plot_currents" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.CurrentGroup.to_dict">
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.to_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.CurrentGroup.from_dict">
-<code class="descname">from_dict</code><span class="sig-paren">(</span><em>cls_dict) (class method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.from_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">cls_dict) (class method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#CurrentGroup.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.CurrentGroup.from_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">kwargs pertain to patches</p>
+<p class="admonition-title">Note</p>
+<p>kwargs pertain to patches</p>
 </div>
 </dd></dl>
 
 <dl class="class">
 <dt id="pleiades.core.Magnet">
-<em class="property">class </em><code class="descclassname">pleiades.core.</code><code class="descname">Magnet</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pleiades.core.</code><code class="sig-name descname">Magnet</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represent a Rectangular cross-section dipole magnet with axisymmetric
 surface currents.</p>
-<dl class="attribute">
-<dt>
-<code class="descname">Inherited from CurrentGroup</code></dt>
-<dd><p>_current: float
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from CurrentGroup</strong> (<em>Inherited</em>) – _current: float
 _obj_list: list of Current instances
 _patchcls:
 _patchargs_dict: {}
 _patchkwargs: dict of valid matplotlib.patches.Polygon kwargs
-_patch: matplotlib.patches.Polygon instance</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">Unique to Magnet</code></dt>
-<dd><p>_loc: tuple
+_patch: matplotlib.patches.Polygon instance</p></li>
+<li><p><strong>to Magnet</strong> (<em>Unique</em>) – _loc: tuple
 _width: float (default .01m)
 _height: float (default .01m)
 _mu_hat: float (default 0 degrees clockwise from Z axis)
-_current_prof: integer or array_like (default np.ones(8) - 8 equal surface currents per side)</p>
-</dd></dl>
-
-<dl class="docutils">
-<dt>Properties:</dt>
-<dd>loc
+_current_prof: integer or array_like (default np.ones(8) - 8 equal surface currents per side)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Properties:</dt><dd><p>loc
 current
 width
 height
@@ -277,21 +312,22 @@ current_prof
 obj_list
 patchkwargs
 patch
-rzdir</dd>
+rzdir</p>
+</dd>
 </dl>
 <dl class="method">
 <dt id="pleiades.core.Magnet.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet.reset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet.reset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.Magnet.update_patch">
-<code class="descname">update_patch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet.update_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet.update_patch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_patch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pleiades/core.html#Magnet.update_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pleiades.core.Magnet.update_patch" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pleiades.core.Magnet.plot">
-<code class="descname">plot</code><span class="sig-paren">(</span><em>ax</em>, <em>centroid=True</em>, <em>currents=True</em>, <em>patch=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pleiades.core.Magnet.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">ax</em>, <em class="sig-param">centroid=True</em>, <em class="sig-param">currents=True</em>, <em class="sig-param">patch=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pleiades.core.Magnet.plot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -299,56 +335,52 @@ rzdir</dd>
 </div>
 
 
+           </div>
+           
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="grids.html" class="btn btn-neutral float-right" title="Grids" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="examples/index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Ethan Peterson
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Welcome to pleiades’s documentation!</a></li>
-      <li>Next: <a href="grids.html" title="next chapter">Grids</a></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/core.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2018, Ethan Peterson.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
-      |
-      <a href="_sources/core.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 from numpy import pi,linspace,meshgrid,sin,cos,sqrt,sum,array,ones,zeros,hstack,vstack,sign,mod,isfinite,ceil,isclose
 from scipy.special import ellipk, ellipe
 from multiprocessing import Process, Queue, cpu_count

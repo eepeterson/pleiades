@@ -1,7 +1,7 @@
 # .gitignore
 
 # ignore compiled python files
-*.pyc
+*.py[cod]
 
 # ignore swap files
 *.swp
@@ -26,3 +26,11 @@ dist/*
 pleiades.egg-info/*
 .idea/*
 
+# Documentation builds
+docs/build
+docs/source/_images/*.pdf
+docs/source/_images/*.aux
+docs/source/pythonapi/generated/
+
+# Source build
+build

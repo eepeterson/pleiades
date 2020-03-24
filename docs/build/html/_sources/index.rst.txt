@@ -1,28 +1,26 @@
-.. pleiades documentation master file, created by
-   sphinx-quickstart on Sat Sep 29 12:23:16 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+============================================================
+Plasma Experiment Iteratively Advanced Design and Simulation
+============================================================
 
-Welcome to pleiades's documentation!
-====================================
+
+
+.. only:: html
+
+   --------
+   Contents
+   --------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
 
-   core
-   grids
-   eq_solve
-   math
-   helpers
-   io
-   wipplsystems
+    quickinstall
+    examples/index
+    core 
+    grids
+    eq_solve
+    math
+    helpers
+    io
+    wipplsystems
+    resources
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

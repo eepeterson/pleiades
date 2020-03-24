@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt

@@ -1,6 +1,5 @@
 #####  still need to remove datahelpers dependency!
 #
-#from __future__ import print_function, division, absolute_import, unicode_literals
 #import analysis.datahelpers as dh
 ####import plottingtools.plottingtools as ptools
 #from pleiades.helpers import get_fieldline_distance, get_fieldlines, interp
