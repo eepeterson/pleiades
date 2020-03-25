@@ -119,6 +119,7 @@ def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
         ## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface
         f.write("\n"+"".join("{: 16.9E}\n".format(xi) if np.mod(i+1,5)==0 else "{: 16.9E}".format(xi) for i,xi in enumerate(lim_ves_pairs)))
 
+
 def write_eqdsk_fromdict(eq_dict,fname):
     title = eq_dict["title"]
     cursign,nnr,nnz,nnv = eq_dict["cursign"], eq_dict["nnr"], eq_dict["nnz"], eq_dict["nnv"]

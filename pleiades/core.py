@@ -6,7 +6,7 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.transforms import Affine2D
 from numbers import Number
-import warnings
+from warnings import warn, simplefilter
 import pickle
 
 
@@ -15,15 +15,15 @@ class Current(object):
 
     Parameters
     ----------
-    loc : tuple of (R, Z) centroid, optional
-        The location of the current centroid in meters. Defaults to None
+    loc : tuple, optional
+        The (R, Z) location of the current centroid in meters. Defaults to None
     current : float, optional
         The current in the ring in amps, defaults to 1 amp.
 
     Attributes
     ----------
-    loc : tuple of (R, Z) centroid, optional
-        The location of the current centroid in meters. Defaults to None
+    loc : tuple, optional
+        The (R, Z) location of the current centroid in meters. Defaults to None
     current : float, optional
         The current in the ring in amps, defaults to 1 amp.
     marker : str
@@ -43,7 +43,8 @@ class Current(object):
     def loc(self, loc):
         r, z = loc
         if r <= 0:
-            warnings.warn("Current r location found in left half plane, setting it to zero", UserWarning)
+            warn('Current R location in left half plane, setting it to zero',
+                 UserWarning)
             r = 0
             self.current = 0
         else:
@@ -56,56 +57,69 @@ class Current(object):
 
     @current.setter
     def current(self, newcurrent):
-        """Set current value in Amps + for ZxR direction - for RxZ"""
+        #Set current value in Amps + for ZxR direction - for RxZ
         self._current = float(newcurrent)
         if self._current == 0:
-            self.marker = ""
+            self.marker = ''
         elif self._current < 0:
-            self.marker = "ko"
+            self.marker = 'ko'
         else:
-            self.marker = "kx"
+            self.marker = 'kx'
 
     def plot(self, ax):
-        """Plot current locations with markers for +/-"""
+        """Plot current locations with markers for +/-
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axis on which to plot the current location
+        """
         r0, z0 = self._loc
         ax.plot(r0, z0, self.marker)
 
     def to_dict(self):
+        """Represent Current object as a dictionary"""
         cls = str(self.__class__).split("'")[1]
         return {"cls": cls, "loc": self._loc, "current": self._current}
 
     @classmethod
     def from_dict(cls, cls_dict):
-        """Create Current instance from a dictionary"""
+        """Create Current instance from a dictionary
+        
+        Parameters
+        ----------
+        cls_dict : dict
+            The dictionary from which to construct a Current.
+        """
         cls = cls_dict.pop("cls", None)
         return cls(**cls_dict)
 
 
 class CurrentGroup(object):
-    """ Grouping of Current objects
-    Attributes:
-        _obj_list
-        _current
-        patchcls
-        patchargs_dict
-        patchkwargs
-        _patch
-    Properties:
-        obj_list
-        current
-        rzdir
-        patchcls
-        patchargs_dict
-        patchkwargs
-        patch
-    Methods:
-        build_patchargs(**kwargs)
-        update_patch()
-        plot_currents(ax)
-        to_dict()
-        from_dict(cls_dict) (class method)
-    Note:
-        kwargs pertain to patches
+    """ Grouping of Current objects that have the same current value
+
+    Parameters
+    ----------
+    rz_pts : iterable, optional
+        Nx2 iterable representing R,Z current centroids. Defaults to None
+    current : float, optional
+        The current in all the current ring in amps, defaults to 1 amp.
+    kwargs : matplotlib patch keyword arguments
+
+    Attributes
+    ----------
+    current : float
+        The current in the CurrentGroup in amps.
+    obj_list : list
+        The list of Current objects that comprise the CurrentGroup
+    rzdir : np.array
+        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which
+        describe the current location and current value for each current in the
+        CurrentGroup
+    patch : matplotlib.patches.Patch object
+        The patch object representing the CurrentGroup for plotting
+    patchkwargs : dict
+        The keyword arguments used for the patch attribute
     """
 
     def __init__(self, rz_pts=None, current=1.0, **kwargs):
@@ -156,12 +170,32 @@ class CurrentGroup(object):
         return self._patch
 
     def translate(self, dr, dz):
+        """Translate the current group by the vector (dr, dz)
+
+        Parameters
+        ----------
+        dr : float
+            The displacement in the R direction for the translation
+        dz : float
+            The displacement in the Z direction for the translation
+        """
         for c_obj in self._obj_list:
             r, z = c_obj.loc
             c_obj.loc = r + dr, z + dz
         self.update_patch()
 
     def rotate(self, r0, z0, angle):
+        """Rotate the current group by a given angle around a specified pivot
+
+        Parameters
+        ----------
+        r0 : float
+            The R location of the pivot
+        z0 : float
+            The Z location of the pivot
+        angle : float
+            The angle of the rotation in degrees as measured from the z axis
+        """
         angle = pi / 180.0 * angle
         cost = cos(angle)
         sint = sin(angle)
@@ -173,20 +207,20 @@ class CurrentGroup(object):
         self.update_patch()
 
     def build_patchargs(self, **kwargs):
-        # build arg tuple for patchcls from patchargs_dict
-        # This should be the only method necessary to override in child class
-        # for proper patch performance
+        """Build argument tuple for patchcls"""
         raise NotImplementedError("This method should be overridden in the child class")
 
     def rebuild(self, key, value):
+        """Reset the CurrentGroup based on the key, value pairs passed in"""
         cls_dict = self.to_dict()
-        cls_dict.pop("cls", None)
+        cls_dict.pop('cls', None)
         if key not in cls_dict.keys():
-            raise KeyError("key {0} not found in dictionary representation of {1}".format(key, self.__class__))
+            raise KeyError(f'{key} not in dict representing {type(self)}')
         cls_dict[key] = value
         self.reset(**cls_dict)
 
     def update_patch(self):
+        """Update the patch for the CurrentGroup"""
         try:
             patchargs = self.build_patchargs(**self.patchargs_dict)
             self._patch = self.patchcls(*patchargs, **self.patchkwargs)
@@ -194,10 +228,32 @@ class CurrentGroup(object):
             self._patch = None
 
     def plot_currents(self, ax, *args, **kwargs):
+        """Plot the current locations for the CurrentGroup
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axes object for plotting the current locations
+        *args : tuple
+            Positional arguments to pass to Current.plot method
+        **kwargs : dict, optional
+            Keyword arguments to pass to Current.plot method
+        """
         for c_obj in self._obj_list:
             c_obj.plot(ax, *args, **kwargs)
 
     def plot(self, ax, *args, **kwargs):
+        """Plot the current locations for the CurrentGroup
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axes object for plotting the current locations
+        *args : tuple
+            Positional arguments to pass to Current.plot method
+        **kwargs : dict, optional
+            Keyword arguments to pass to Current.plot method
+        """
         if kwargs.pop("plot_center", True):
             try:
                 ax.plot(self.loc[0], self.loc[1], "co")
@@ -209,6 +265,7 @@ class CurrentGroup(object):
             self.plot_currents(ax)
 
     def to_dict(self):
+        """Represent the CurrentGroup as a dictionary"""
         cls_dict = {key.strip("_"): value for key, value in self.__dict__.items()}
         cls_dict.pop("obj_list")
         cls_dict.pop("patch")
@@ -219,6 +276,13 @@ class CurrentGroup(object):
 
     @classmethod
     def from_dict(cls, cls_dict):
+        """Create Current instance from a dictionary
+
+        Parameters
+        ----------
+        cls_dict : dict
+            The dictionary from which to construct a Current.
+        """
         cls_str = cls_dict.pop("cls", None)
         return cls(**cls_dict)
 
@@ -227,35 +291,41 @@ class Magnet(CurrentGroup):
     """Represent a Rectangular cross-section dipole magnet with axisymmetric 
     surface currents.
 
-    Attributes:
-        Inherited from CurrentGroup:
-            _current: float
-            _obj_list: list of Current instances
-            _patchcls: 
-            _patchargs_dict: {}
-            _patchkwargs: dict of valid matplotlib.patches.Polygon kwargs
-            _patch: matplotlib.patches.Polygon instance
-        Unique to Magnet: 
-            _loc: tuple
-            _width: float (default .01m)
-            _height: float (default .01m)
-            _mu_hat: float (default 0 degrees clockwise from Z axis)
-            _current_prof: integer or array_like (default np.ones(8) - 8 equal surface currents per side)
-    Properties:
-        loc
-        current
-        width
-        height
-        mu_hat
-        current_prof
-        obj_list
-        patchkwargs
-        patch
-        rzdir
-    Methods:
-        reset(**kwargs)
-        update_patch()
-        plot(ax,centroid=True,currents=True,patch=True)
+    Parameters
+    ----------
+    rz_pts : iterable, optional
+        Nx2 iterable representing R,Z current centroids. Defaults to None
+    current : float, optional
+        The current in all the current ring in amps, defaults to 1 amp.
+    kwargs : matplotlib patch keyword arguments
+
+    Attributes
+    ----------
+    loc : tuple
+        The (R, Z) location of the centroid of the magnet.
+    width : float, optional
+        The width of the magnet. Defaults to 0.01 m.
+    height : float, optional
+        The height of the magnet. Defaults to 0.01 m.
+    mu_hat : float, optional
+        The angle of the magnetic moment of the magnet in degrees from the z
+        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole
+        points in the +z direction).
+    current_prof : integer or array_like
+        The current profile along the side of the magnet. Defaults to
+        np.ones(8) i.e. 8 equal surface currents per side.
+    current : float
+        The current in the magnet in amps.
+    obj_list : list
+        The list of Current objects that comprise the Magnet
+    rzdir : np.array
+        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which
+        describe the current location and current value for each current in the
+        Magnet
+    patch : matplotlib.patches.Patch object
+        The patch object representing the Magnet for plotting
+    patchkwargs : dict
+        The keyword arguments used for the patch attribute
     """
 
     def __init__(self, **kwargs):
@@ -369,26 +439,44 @@ class Magnet(CurrentGroup):
         return array([c_obj.loc + (sign(c_obj._current)) for c_obj in self._obj_list], dtype="float32")
 
     def rotate(self, angle):
+        """Rotate the magnet by a given angle around the magnet centroid
+
+        Parameters
+        ----------
+        angle : float
+            The angle of the rotation in degrees as measured from the z axis
+        """
         r0, z0 = self._loc
         self._mu_hat += angle
         super(Magnet, self).rotate(r0, z0, angle)
 
     def translate(self, dr, dz):
+        """Translate the magnet by the vector (dr, dz)
+
+        Parameters
+        ----------
+        dr : float
+            The displacement in the R direction for the translation
+        dz : float
+            The displacement in the Z direction for the translation
+        """
         r0, z0 = self._loc
         self.loc = (r0 + dr, z0 + dz)
 
     def build_patchargs(self, **kwargs):
-        # patchcls Polygon needs Nx2 array of verts
+        """Build argument tuple for patchcls"""
         w = self._width / 2.0
         h = self._height / 2.0
         return (array([[-w, -h], [-w, h], [w, h], [w, -h]]),)
 
     def update_patch(self):
+        """Update the patch for the magnet"""
         super(Magnet, self).update_patch()
         r0, z0 = self._loc
         self._patch.set_transform(Affine2D().translate(r0, z0).rotate_deg_around(r0, z0, -self._mu_hat))
 
     def to_dict(self):
+        "Represent the Magnet with a dictionary"""
         cls_dict = {key.strip("_"): value for key, value in self.__dict__.items()}
         cls_dict.pop('obj_list')
         cls_dict.pop('patch')
@@ -398,31 +486,67 @@ class Magnet(CurrentGroup):
 
 
 class CurrentArray(CurrentGroup):
-    """ blah blah blah
-    Attributes:
-        _loc
-        _current
-        _nr
-        _nz
-        _dr
-        _dz
-        _angle
-        _patchcls
-        _patchargs_dict
-        _patchkwargs
-    Properties:
-        loc
-        current
-        nr
-        nz
-        dr
-        dz
-        angle
-        patchcls
-        patchargs_dict
-        patchkwargs
-    Methods:
-        build_patchargs
+    """A rectangular current array
+
+    Parameters
+    ----------
+    loc : tuple, optional
+        The (R, Z) location of the centroid of the CurrentArray. Defaults to
+        (1.0m, 1.0m).
+    current : float, optional
+        The current in each current of the CurrentArray in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float, optional
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float, optional
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float, optional
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float, optional
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    angle : float, optional
+        The angle of the CurrentArray if it is not aligned with the RZ
+        coordinate system. The angle is measured in degrees from the z
+        axis. Defaults to 0 degrees.
+    patchcls : matplotlib.patches.Patch type
+        The patch object class representing the CurrentArray for plotting
+
+    Attributes
+    ----------
+    loc : tuple
+        The (R, Z) location of the centroid of the CurrentArray. Defaults to
+        (1.0m, 1.0m).
+    current : float
+        The current in each current of the CurrentArray in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    angle : float
+        The angle of the CurrentArray if it is not aligned with the RZ
+        coordinate system. The angle is measured in degrees from the z
+        axis. Defaults to 0 degrees.
+    obj_list : list
+        The list of Current objects that comprise the CurrentArray
+    rzdir : np.array
+        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which
+        describe the current location and current value for each current in the
+        CurrentArray
+    patchcls : matplotlib.patches.Patch type
+        The patch object class representing the CurrentArray for plotting
+    patch : matplotlib.patches.Patch object
+        The patch object representing the CurrentArray for plotting
+    patchkwargs : dict
+        The keyword arguments used for the patch attribute
     """
 
     def __init__(self, **kwargs):
@@ -506,25 +630,46 @@ class CurrentArray(CurrentGroup):
         super(CurrentArray, self).rotate(r0, z0, deg)
 
     def translate(self, dr, dz):
+        """Translate the CurrentArray by the vector (dr, dz)
+
+        Parameters
+        ----------
+        dr : float
+            The displacement in the R direction for the translation
+        dz : float
+            The displacement in the Z direction for the translation
+        """
         r0, z0 = self._loc
         self.loc = (r0 + dr, z0 + dz)
 
     def rotate(self, angle):
+        """Rotate the CurrentArray by a given angle around the centroid
+
+        Parameters
+        ----------
+        angle : float
+            The angle of the rotation in degrees as measured from the z axis
+        """
         r0, z0 = self._loc
         super(CurrentArray, self).rotate(r0, z0, angle)
 
     def build_patchargs(self, **kwargs):
+        """Build argument tuple for patchcls"""
         r0, z0 = self._loc
         w = (self._nr - 1) * self._dr / 2.0
         h = (self._nz - 1) * self._dz / 2.0
         return (array([[-w, -h], [-w, h], [w, h], [w, -h]]),)
 
     def update_patch(self):
+        """Update the patch for the CurrentArray"""
         super(CurrentArray, self).update_patch()
         r0, z0 = self._loc
-        self._patch.set_transform(Affine2D().translate(r0, z0).rotate_deg_around(r0, z0, -self._angle))
+        angle = self._angle
+        trnsf = Affine2D().translate(r0, z0).rotate_deg_around(r0, z0, -angle)
+        self._patch.set_transform(trnsf)
 
     def to_dict(self):
+        """Represent the CurrentArray with a dictionary"""
         cls_dict = {key.strip("_"): value for key, value in self.__dict__.items()}
         cls_dict.pop("obj_list")
         cls_dict.pop("patch")
@@ -534,6 +679,34 @@ class CurrentArray(CurrentGroup):
 
 
 class MagnetGroup(object):
+    """Represent a group of dipole magnets.
+
+    Parameters
+    ----------
+    rz_pts : iterable, optional
+        Nx2 iterable representing R,Z current centroids. Defaults to None
+    mu_hats : iterable of float, optional
+        A list of the angles of the magnetic moment for each magnet in
+        degrees from the z axis. Defaults to None.
+    current : float, optional
+        The current in all the current ring in amps, defaults to 1 amp.
+    kwargs : dict, optional
+        A dictionary holding the keyword arguments for each pleiades.Magnet
+        object.
+
+    Attributes
+    ----------
+    current : float
+        The current in the magnet in amps.
+    obj_list : list
+        The list of Current objects that comprise the Magnet
+    rzdir : np.array
+        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which
+        describe the current location and current value for each current in the
+        Magnet
+    patches : list of matplotlib.patches.Patch objects
+        The patch objects representing the MagnetGroup for plotting
+    """
     def __init__(self, **kwargs):
         MagnetGroup.reset(self, **kwargs)
 
@@ -546,8 +719,9 @@ class MagnetGroup(object):
         self._current = current
         n, d = rz_pts.shape
         if not (d == 2 and n >= 1):
-            raise ValueError("rz_pts shape: {0} is invalid, must be Nx2".format(rz_pts.shape))
-        self.obj_list = [Magnet(loc=(r, z), mu_hat=mhat, **kwargs) for r, z, mhat in vstack((rz_pts.T, mu_hats)).T]
+            raise ValueError(f'rz_pts shape: {(n, d)} is invalid, must be Nx2')
+        self.obj_list = [Magnet(loc=(r, z), mu_hat=mhat, **kwargs)
+                         for r, z, mhat in vstack((rz_pts.T, mu_hats)).T]
 
     @property
     def current(self):
@@ -580,22 +754,39 @@ class MagnetGroup(object):
         return [m_obj.patch for m_obj in self._obj_list]
 
     def update_patch(self):
+        """Udate the patches for the MagnetGroup"""
         for m_obj in self._obj_list:
             m_obj.update_patch()
 
     def plot(self, ax):
+        """Plot magnets
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axis on which to plot the magnets
+        """
         for m_obj in self._obj_list:
             m_obj.plot(ax)
 
     def plot_currents(self, ax):
+        """Plot current locations with markers for +/-
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axis on which to plot the current location
+        """
         for m_obj in self._obj_list:
             m_obj.plot_currents(ax)
 
     def rebuild(self, key, value):
+        """Reset the MAgnetGroup based on the key, value pair passed in"""
         for m_obj in self._obj_list:
             m_obj.rebuild(key, value)
 
     def to_dict(self):
+        """Represent the MagnetGroup as a dictionary"""
         magnets = {i: m_obj.to_dict() for i, m_obj in enumerate(self._obj_list)}
         cls_dict = {"magnets": magnets}
         cls_dict["current"] = self._current
@@ -604,6 +795,13 @@ class MagnetGroup(object):
 
     @classmethod
     def from_dict(cls, cls_dict):
+        """Create MagnetGroup instance from a dictionary
+
+        Parameters
+        ----------
+        cls_dict : dict
+            The dictionary from which to construct a Current.
+        """
         inst = cls()
         current = cls_dict.pop("current")
         inst.obj_list = [Magnet.from_dict(cls_dict) for key, cls_dict in cls_dict.pop("magnets")]
@@ -612,8 +810,47 @@ class MagnetGroup(object):
 
 
 class Component(object):
-    # Components are like HH coils or Mirror Coils or Vessel Magnets
-    # This is the minimum scale that has its own greens function - one for each group
+    """A Container for representing multiple sets of objects and assigning a
+    Green's function to the object. Components are like HH coils or Mirror
+    Coils or Vessel Magnets. This is the minimum scale that has its own Green's
+    function - one for each group.
+
+    Attributes
+    ----------
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    num_groups : int
+        Number of groups that make up the Component
+    currents : list of float
+        A list of currents representing the current in each group in the
+        Component
+    nprocs : int
+        The number of processors to use to compute the Green's functions
+    patches : list of matplotlib.patches.Patch objects
+        A list of all the patches that represent the Component
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+    gpsi : np.array
+        Green's function for magnetic flux psi
+    gBR : np.array
+        Green's function for magnetic field component BR
+    gBZ : np.array
+        Green's function for magnetic field component BZ
+    psi : np.array
+        Magnetic flux evaluated on the grid
+    BR : np.array
+        Magnetic field component BR evaluated on the grid
+    BZ : np.array
+        Magnetic field component BZ evaluated on the grid
+
+    """
     def __init__(self):
         self._groups = None
         self._labels = None
@@ -624,7 +861,8 @@ class Component(object):
         self.grid = None
 
     def compute_greens(self):
-        warnings.simplefilter("ignore", RuntimeWarning)
+        """Compute the Green's functions for flux (psi) and BR and BZ"""
+        simplefilter("ignore", RuntimeWarning)
         proc_max = cpu_count()
         m, n = self.grid.size, self._num_groups
         gpsi = zeros((m, n))
@@ -765,23 +1003,43 @@ class Component(object):
         return (self._gBZ.dot(self.currents)).reshape(self._grid.shape)
 
     def plot_currents(self, ax, *args, **kwargs):
+        """Plot current locations with markers for +/- for all the objects in
+        the Component
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axis on which to plot the current location
+        """
         for group in self.groups:
             group.plot_currents(ax, *args, **kwargs)
 
     def plot(self, ax, *args, **kwargs):
+        """Plot each group including patches for all the objects in the
+        Component
+
+        Parameters
+        ----------
+        ax : matplotlib.Axes object
+            The axis on which to plot the current location
+        """
         for group in self.groups:
             group.plot(ax, *args, **kwargs)
 
     def update_patches(self):
+        """Update the patches for the Component"""
         for group in self._groups:
             group.update_patch()
 
     def update(self):
+        """Update the patches and Green's function for the component"""
         self.compute_greens()
         self.update_patches()
 
     def to_dict(self):
-        cls_dict = {key.strip("_"): value for key, value in self.__dict__.items()}
+        """Represent the component as a dictionary"""
+        cls_dict = dict(key.strip("_"): value
+                        for key, value in self.__dict__.items())
         cls_dict.pop(label, None)
         for group, label in zip(self._groups, self._labels):
             cls_dict[label] = group.to_dict()
@@ -790,6 +1048,13 @@ class Component(object):
 
     @classmethod
     def from_dict(cls, cls_dict):
+        """Create Component from a dictionary
+
+        Parameters
+        ----------
+        cls_dict : dict
+            The dictionary from which to construct a Component.
+        """
         labels = cls_dict.get("labels")
         comp_cls = get_class(cls_dict.pop("cls"))
         groups = []
@@ -809,12 +1074,92 @@ class Component(object):
         return obj
 
 
-'''
-Added 9-18-17 by Roger Waleffe
-'''
-
-
 class Coil(Component):
+    """A component representing a single Coil
+
+    Parameters
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+
+    Attributes
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    num_groups : int
+        Number of groups that make up the Component
+    currents : list of float
+        A list of currents representing the current in each group in the
+        Component
+    nprocs : int
+        The number of processors to use to compute the Green's functions
+    patches : list of matplotlib.patches.Patch objects
+        A list of all the patches that represent the Component
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+    gpsi : np.array
+        Green's function for magnetic flux psi
+    gBR : np.array
+        Green's function for magnetic field component BR
+    gBZ : np.array
+        Green's function for magnetic field component BZ
+    psi : np.array
+        Magnetic flux evaluated on the grid
+    BR : np.array
+        Magnetic field component BR evaluated on the grid
+    BZ : np.array
+        Magnetic field component BZ evaluated on the grid
+    """
     def __init__(self, **kwargs):
         super(Coil, self).__init__()
         r0 = float(kwargs.pop("r0", 1))
@@ -906,6 +1251,91 @@ class Coil(Component):
 
 
 class CoilPack(Component):
+    """A component representing a single CoilPack
+
+    Parameters
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+
+    Attributes
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    num_groups : int
+        Number of groups that make up the Component
+    currents : list of float
+        A list of currents representing the current in each group in the
+        Component
+    nprocs : int
+        The number of processors to use to compute the Green's functions
+    patches : list of matplotlib.patches.Patch objects
+        A list of all the patches that represent the Component
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+    gpsi : np.array
+        Green's function for magnetic flux psi
+    gBR : np.array
+        Green's function for magnetic field component BR
+    gBZ : np.array
+        Green's function for magnetic field component BZ
+    psi : np.array
+        Magnetic flux evaluated on the grid
+    BR : np.array
+        Magnetic field component BR evaluated on the grid
+    BZ : np.array
+        Magnetic field component BZ evaluated on the grid
+    """
     def __init__(self, **kwargs):
         super(CoilPack, self).__init__()
         r0 = float(kwargs.pop("r0", 1))
@@ -1003,6 +1433,91 @@ class CoilPack(Component):
 
 
 class ZSymmCoilSet(Component):
+    """A component representing a coil set that is symmetric about Z=0
+
+    Parameters
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+
+    Attributes
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    num_groups : int
+        Number of groups that make up the Component
+    currents : list of float
+        A list of currents representing the current in each group in the
+        Component
+    nprocs : int
+        The number of processors to use to compute the Green's functions
+    patches : list of matplotlib.patches.Patch objects
+        A list of all the patches that represent the Component
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+    gpsi : np.array
+        Green's function for magnetic flux psi
+    gBR : np.array
+        Green's function for magnetic field component BR
+    gBZ : np.array
+        Green's function for magnetic field component BZ
+    psi : np.array
+        Magnetic flux evaluated on the grid
+    BR : np.array
+        Magnetic field component BR evaluated on the grid
+    BZ : np.array
+        Magnetic field component BZ evaluated on the grid
+    """
     def __init__(self, **kwargs):
         super(ZSymmCoilSet, self).__init__()
         r0 = float(kwargs.pop("r0", 1))
@@ -1097,6 +1612,69 @@ class ZSymmCoilSet(Component):
 
 
 class HelmholtzCoil(ZSymmCoilSet):
+    """A Helmholtz coil set
+
+    Parameters
+    ----------
+    r0 : float, optional
+        The radius of the Helmholtz coil set. Defaults to 1.0m
+    z0 : float, optional
+        The separation of the Helmholtz coil set. Defaults to 1.0m
+    **kwargs : dict, optional
+        Keyword arguments for pleiades.ZSymmCoilSet
+
+    Attributes
+    ----------
+    r0 : float, optional
+        The radius of the Helmholtz coil set. Defaults to 1.0m
+    z0 : float, optional
+        The separation of the Helmholtz coil set. Defaults to 1.0m
+    current : float
+        The current in each current of the Coil in amps (i.e power
+        supply current). Defaults to 1 amp.
+    nr : float
+        The number of current filaments in the R direction. Defaults to 10.
+    nz : float
+        The number of current filaments in the Z direction. Defaults to 10.
+    dr : float
+        The distance between current filaments in the R direction. Defaults to
+        0.01 m
+    dz : float
+        The distance between current filaments in the Z direction. Defaults to
+        0.01 m
+    groups : list
+        A list of all the groups that comprise this Component
+    labels : list of str
+        A list of all the names for the groups that comprise this Component.
+        Each label is also accessible as an attribute on the Component as well.
+    num_groups : int
+        Number of groups that make up the Component
+    currents : list of float
+        A list of currents representing the current in each group in the
+        Component
+    nprocs : int
+        The number of processors to use to compute the Green's functions
+    patches : list of matplotlib.patches.Patch objects
+        A list of all the patches that represent the Component
+    patch_mask : iterable of bool
+        A list of booleans of the same length as the number of groups where True
+        indicates to hide the patch for that particular group.
+    grid : pleiades.Grid instance
+        A grid on which to compute the Green's functions for flux and magnetic
+        fields
+    gpsi : np.array
+        Green's function for magnetic flux psi
+    gBR : np.array
+        Green's function for magnetic field component BR
+    gBZ : np.array
+        Green's function for magnetic field component BZ
+    psi : np.array
+        Magnetic flux evaluated on the grid
+    BR : np.array
+        Magnetic field component BR evaluated on the grid
+    BZ : np.array
+        Magnetic field component BZ evaluated on the grid
+    """
     def __init__(self, **kwargs):
         r0 = float(kwargs.pop("r0", 1))
         # throw away z0 if specified
@@ -1119,6 +1697,40 @@ class HelmholtzCoil(ZSymmCoilSet):
 
 
 class Configuration(object):
+    """A container for a full configuration of magnets for an experiment
+
+    Parameters
+    ----------
+    components : list
+        A list of pleiades.Component objects to be added to the configuration
+    labels : list of str
+        A list of the names for the components being added
+    filename : str
+        A filename for the Configuration
+    grid : pleiades.Grid object
+        A grid on which to compute Green's functions and fields
+    artists :
+        A list of matplotlib patch objects 
+
+    Attributes
+    ----------
+    grid : pleiades.Grid object
+        A grid on which to compute Green's functions and fields
+    R : np.array
+        The R locations of the grid
+    Z : np.array
+        The Z locations of the grid
+    psi : np.array
+        The psi values on the grid
+    BR : np.array
+        The BR values on the grid
+    BZ : np.array
+        The BZ values on the grid
+    patches : list
+        A list of patch objects for the configuration
+    patch_coll : matplotlib.patches.PatchCollection
+        A patch collection for easier adding to matplotlib axes
+    """
     def __init__(self, **kwargs):
         self.components = kwargs.pop("components", [])
         self.labels = kwargs.pop("labels", [])
@@ -1210,6 +1822,7 @@ class Configuration(object):
 
 
 def load_config(filename):
+    """Load a configuration from a pickle file"""
     if filename.lower().endswith(('.p', '.pickle')):
         with open(filename, "r") as f:
             config = pickle.load(f)
@@ -1220,6 +1833,7 @@ def load_config(filename):
 
 
 def save_config(config, filename):
+    """Save a configuration to a pickle file"""
     config.update()
     if filename.lower().endswith(('.p', '.pickle')) or '.' not in filename:
         if '.' not in filename:
@@ -1234,11 +1848,21 @@ def save_config(config, filename):
 
 
 def _get_greens(R, Z, rzdir, out_q=None):
-    # private function assumes all rzdir have the same current
-    # resulting in a 1D greens function, used internally by 
-    # component class. For computing your own green's functions 
-    # use the public version
-    warnings.simplefilter("ignore", RuntimeWarning)
+    """Helper function for computing Green's functions
+
+    Parameters
+    ----------
+    R : np.array
+        A 1D np.array representing the R positions of the grid
+    Z : np.array
+        A 1D np.array representing the Z positions of the grid
+    rzdir : np.array
+        An Nx3 np.array representing the r, z positions and sign of the current
+        in all the current filaments.
+    out_q: multiprocessing.Queue object?
+        Internally used for faster processing of Green's functions
+    """
+    simplefilter("ignore", RuntimeWarning)
     n = len(R)
     gpsi = zeros(n)
     gBR = zeros(n)
@@ -1274,7 +1898,28 @@ def _get_greens(R, Z, rzdir, out_q=None):
 
 
 def get_greens(R, Z, rzdir, out_q=None, out_idx=None):
-    warnings.simplefilter("ignore", RuntimeWarning)
+    """Compute Green's functions for psi, BR, and BZ
+
+    Parameters
+    ----------
+    R : np.array
+        A 1D np.array representing the R positions of the grid
+    Z : np.array
+        A 1D np.array representing the Z positions of the grid
+    rzdir : np.array
+        An Nx3 np.array representing the r, z positions and sign of the current
+        in all the current filaments.
+    out_q: multiprocessing.Queue object?
+        Internally used for faster processing of Green's functions
+    out_idx: int?
+        Internally used for faster processing of Green's functions
+
+    Returns
+    -------
+    out_tup : tuple
+        Tuple of 3 elements (gpsi, gBR, gBZ) for the 3 Green's functions
+    """
+    simplefilter("ignore", RuntimeWarning)
     m, n = len(R), len(rzdir)
     gpsi = zeros((m, n))
     gBR = zeros((m, n))
@@ -1313,7 +1958,28 @@ def get_greens(R, Z, rzdir, out_q=None, out_idx=None):
 
 
 def compute_greens(R, Z, rzdir=None, nprocs=1):
-    warnings.simplefilter("ignore", RuntimeWarning)
+    """Compute Green's functions for psi, BR, and BZ
+
+    Parameters
+    ----------
+    R : np.array
+        A 1D np.array representing the R positions of the grid
+    Z : np.array
+        A 1D np.array representing the Z positions of the grid
+    rzdir : np.array
+        An Nx3 np.array representing the r, z positions and sign of the current
+        in all the current filaments.
+    out_q: multiprocessing.Queue object?
+        Internally used for faster processing of Green's functions
+    out_idx: int?
+        Internally used for faster processing of Green's functions
+
+    Returns
+    -------
+    out_tup : tuple
+        Tuple of 3 elements (gpsi, gBR, gBZ) for the 3 Green's functions
+    """
+    simplefilter("ignore", RuntimeWarning)
     proc_max = cpu_count()
     if rzdir is None:
         rzdir = vstack((R, Z, ones(len(R)))).T
