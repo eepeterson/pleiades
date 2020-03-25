@@ -15,12 +15,6 @@ Plasma Experiment Iteratively Advanced Design and Simulation
 
     quickinstall
     examples/index
-    core 
-    grids
-    eq_solve
-    math
-    helpers
-    io
-    wipplsystems
+    pythonapi/index
     resources
 
