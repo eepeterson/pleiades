@@ -27,7 +27,7 @@ pleiades.egg-info/*
 .idea/*
 
 # Documentation builds
-docs/build
+docs/build/
 docs/source/_images/*.pdf
 docs/source/_images/*.aux
 docs/source/pythonapi/generated/
