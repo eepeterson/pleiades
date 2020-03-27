@@ -59,7 +59,7 @@
 
           
             
-            <img src="../../_static/pleiades_logo.png" class="logo" alt="Logo"/>
+            <img src="../../_static/pleiades_logo.svg" class="logo" alt="Logo"/>
           
           </a>
 
@@ -163,24 +163,24 @@
 <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="k">import</span> <span class="n">PatchCollection</span>
 <span class="kn">from</span> <span class="nn">matplotlib.transforms</span> <span class="k">import</span> <span class="n">Affine2D</span>
 <span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span><span class="p">,</span> <span class="n">simplefilter</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 
 
-<div class="viewcode-block" id="Current"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Current">[docs]</a><span class="k">class</span> <span class="nc">Current</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Current"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Current.html#pleiades.Current">[docs]</a><span class="k">class</span> <span class="nc">Current</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represents an axisymmetric ring of toroidal current.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    loc : tuple of (R, Z) centroid, optional</span>
-<span class="sd">        The location of the current centroid in meters. Defaults to None</span>
+<span class="sd">    loc : tuple, optional</span>
+<span class="sd">        The (R, Z) location of the current centroid in meters. Defaults to None</span>
 <span class="sd">    current : float, optional</span>
 <span class="sd">        The current in the ring in amps, defaults to 1 amp.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    loc : tuple of (R, Z) centroid, optional</span>
-<span class="sd">        The location of the current centroid in meters. Defaults to None</span>
+<span class="sd">    loc : tuple, optional</span>
+<span class="sd">        The (R, Z) location of the current centroid in meters. Defaults to None</span>
 <span class="sd">    current : float, optional</span>
 <span class="sd">        The current in the ring in amps, defaults to 1 amp.</span>
 <span class="sd">    marker : str</span>
@@ -200,7 +200,8 @@
     <span class="k">def</span> <span class="nf">loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">):</span>
         <span class="n">r</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">loc</span>
         <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Current r location found in left half plane, setting it to zero&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Current R location in left half plane, setting it to zero&#39;</span><span class="p">,</span>
+                 <span class="ne">UserWarning</span><span class="p">)</span>
             <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
@@ -213,62 +214,75 @@
 
     <span class="nd">@current</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newcurrent</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set current value in Amps + for ZxR direction - for RxZ&quot;&quot;&quot;</span>
+        <span class="c1">#Set current value in Amps + for ZxR direction - for RxZ</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_current</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">newcurrent</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s2">&quot;ko&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;ko&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s2">&quot;kx&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;kx&#39;</span>
 
-<div class="viewcode-block" id="Current.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Current.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Plot current locations with markers for +/-&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Current.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Current.html#pleiades.Current.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot current locations with markers for +/-</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axis on which to plot the current location</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Current.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Current.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Current.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Current.html#pleiades.Current.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent Current object as a dictionary&quot;&quot;&quot;</span>
         <span class="bp">cls</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cls&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span><span class="p">,</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current</span><span class="p">}</span></div>
 
-<div class="viewcode-block" id="Current.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Current.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Current.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Current.html#pleiades.Current.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cls_dict</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create Current instance from a dictionary&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Create Current instance from a dictionary</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cls_dict : dict</span>
+<span class="sd">            The dictionary from which to construct a Current.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">cls</span> <span class="o">=</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls_dict</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="CurrentGroup"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup">[docs]</a><span class="k">class</span> <span class="nc">CurrentGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Grouping of Current objects</span>
-<span class="sd">    Attributes:</span>
-<span class="sd">        _obj_list</span>
-<span class="sd">        _current</span>
-<span class="sd">        patchcls</span>
-<span class="sd">        patchargs_dict</span>
-<span class="sd">        patchkwargs</span>
-<span class="sd">        _patch</span>
-<span class="sd">    Properties:</span>
-<span class="sd">        obj_list</span>
-<span class="sd">        current</span>
-<span class="sd">        rzdir</span>
-<span class="sd">        patchcls</span>
-<span class="sd">        patchargs_dict</span>
-<span class="sd">        patchkwargs</span>
-<span class="sd">        patch</span>
-<span class="sd">    Methods:</span>
-<span class="sd">        build_patchargs(**kwargs)</span>
-<span class="sd">        update_patch()</span>
-<span class="sd">        plot_currents(ax)</span>
-<span class="sd">        to_dict()</span>
-<span class="sd">        from_dict(cls_dict) (class method)</span>
-<span class="sd">    Note:</span>
-<span class="sd">        kwargs pertain to patches</span>
+<div class="viewcode-block" id="CurrentGroup"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup">[docs]</a><span class="k">class</span> <span class="nc">CurrentGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Grouping of Current objects that have the same current value</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rz_pts : iterable, optional</span>
+<span class="sd">        Nx2 iterable representing R,Z current centroids. Defaults to None</span>
+<span class="sd">    current : float, optional</span>
+<span class="sd">        The current in all the current ring in amps, defaults to 1 amp.</span>
+<span class="sd">    kwargs : matplotlib patch keyword arguments</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in the CurrentGroup in amps.</span>
+<span class="sd">    obj_list : list</span>
+<span class="sd">        The list of Current objects that comprise the CurrentGroup</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which</span>
+<span class="sd">        describe the current location and current value for each current in the</span>
+<span class="sd">        CurrentGroup</span>
+<span class="sd">    patch : matplotlib.patches.Patch object</span>
+<span class="sd">        The patch object representing the CurrentGroup for plotting</span>
+<span class="sd">    patchkwargs : dict</span>
+<span class="sd">        The keyword arguments used for the patch attribute</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rz_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">CurrentGroup</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rz_pts</span><span class="o">=</span><span class="n">rz_pts</span><span class="p">,</span> <span class="n">current</span><span class="o">=</span><span class="n">current</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CurrentGroup.reset"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">rz_pts</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;rz_pts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">rz_pts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;rz_pts must not be None&quot;</span><span class="p">)</span>
@@ -282,7 +296,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Current</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">current</span><span class="o">=</span><span class="n">current</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">rz_pts</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">patchkwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;zorder&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">patchkwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -312,13 +326,33 @@
     <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span>
 
-<div class="viewcode-block" id="CurrentGroup.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate the current group by the vector (dr, dz)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dr : float</span>
+<span class="sd">            The displacement in the R direction for the translation</span>
+<span class="sd">        dz : float</span>
+<span class="sd">            The displacement in the Z direction for the translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">c_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">r</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">c_obj</span><span class="o">.</span><span class="n">loc</span>
             <span class="n">c_obj</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="n">dr</span><span class="p">,</span> <span class="n">z</span> <span class="o">+</span> <span class="n">dz</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate the current group by a given angle around a specified pivot</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        r0 : float</span>
+<span class="sd">            The R location of the pivot</span>
+<span class="sd">        z0 : float</span>
+<span class="sd">            The Z location of the pivot</span>
+<span class="sd">        angle : float</span>
+<span class="sd">            The angle of the rotation in degrees as measured from the z axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">angle</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span> <span class="o">*</span> <span class="n">angle</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
         <span class="n">sint</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
@@ -329,32 +363,54 @@
             <span class="n">c_obj</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="n">newr</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="c1"># build arg tuple for patchcls from patchargs_dict</span>
-        <span class="c1"># This should be the only method necessary to override in child class</span>
-        <span class="c1"># for proper patch performance</span>
+<div class="viewcode-block" id="CurrentGroup.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build argument tuple for patchcls&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This method should be overridden in the child class&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.rebuild"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.rebuild">[docs]</a>    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.rebuild"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.rebuild">[docs]</a>    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the CurrentGroup based on the key, value pairs passed in&quot;&quot;&quot;</span>
         <span class="n">cls_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;cls&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;key </span><span class="si">{0}</span><span class="s2"> not found in dictionary representation of </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{key}</span><span class="s1"> not in dict representing {type(self)}&#39;</span><span class="p">)</span>
         <span class="n">cls_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">**</span><span class="n">cls_dict</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the patch for the CurrentGroup&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">patchargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_patchargs</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">patchargs_dict</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patchcls</span><span class="p">(</span><span class="o">*</span><span class="n">patchargs</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">patchkwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the current locations for the CurrentGroup</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axes object for plotting the current locations</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">            Positional arguments to pass to Current.plot method</span>
+<span class="sd">        **kwargs : dict, optional</span>
+<span class="sd">            Keyword arguments to pass to Current.plot method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">c_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">c_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the current locations for the CurrentGroup</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axes object for plotting the current locations</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">            Positional arguments to pass to Current.plot method</span>
+<span class="sd">        **kwargs : dict, optional</span>
+<span class="sd">            Keyword arguments to pass to Current.plot method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;plot_center&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;co&quot;</span><span class="p">)</span>
@@ -365,7 +421,8 @@
         <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;plot_currents&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot_currents</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentGroup.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent the CurrentGroup as a dictionary&quot;&quot;&quot;</span>
         <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;obj_list&quot;</span><span class="p">)</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">)</span>
@@ -374,51 +431,64 @@
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;patchkwargs&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">cls_dict</span></div>
 
-<div class="viewcode-block" id="CurrentGroup.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentGroup.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CurrentGroup.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentGroup.html#pleiades.CurrentGroup.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cls_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create Current instance from a dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cls_dict : dict</span>
+<span class="sd">            The dictionary from which to construct a Current.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cls_str</span> <span class="o">=</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls_dict</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Magnet"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet">[docs]</a><span class="k">class</span> <span class="nc">Magnet</span><span class="p">(</span><span class="n">CurrentGroup</span><span class="p">):</span>
+<div class="viewcode-block" id="Magnet"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet">[docs]</a><span class="k">class</span> <span class="nc">Magnet</span><span class="p">(</span><span class="n">CurrentGroup</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represent a Rectangular cross-section dipole magnet with axisymmetric </span>
 <span class="sd">    surface currents.</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">        Inherited from CurrentGroup:</span>
-<span class="sd">            _current: float</span>
-<span class="sd">            _obj_list: list of Current instances</span>
-<span class="sd">            _patchcls: </span>
-<span class="sd">            _patchargs_dict: {}</span>
-<span class="sd">            _patchkwargs: dict of valid matplotlib.patches.Polygon kwargs</span>
-<span class="sd">            _patch: matplotlib.patches.Polygon instance</span>
-<span class="sd">        Unique to Magnet: </span>
-<span class="sd">            _loc: tuple</span>
-<span class="sd">            _width: float (default .01m)</span>
-<span class="sd">            _height: float (default .01m)</span>
-<span class="sd">            _mu_hat: float (default 0 degrees clockwise from Z axis)</span>
-<span class="sd">            _current_prof: integer or array_like (default np.ones(8) - 8 equal surface currents per side)</span>
-<span class="sd">    Properties:</span>
-<span class="sd">        loc</span>
-<span class="sd">        current</span>
-<span class="sd">        width</span>
-<span class="sd">        height</span>
-<span class="sd">        mu_hat</span>
-<span class="sd">        current_prof</span>
-<span class="sd">        obj_list</span>
-<span class="sd">        patchkwargs</span>
-<span class="sd">        patch</span>
-<span class="sd">        rzdir</span>
-<span class="sd">    Methods:</span>
-<span class="sd">        reset(**kwargs)</span>
-<span class="sd">        update_patch()</span>
-<span class="sd">        plot(ax,centroid=True,currents=True,patch=True)</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rz_pts : iterable, optional</span>
+<span class="sd">        Nx2 iterable representing R,Z current centroids. Defaults to None</span>
+<span class="sd">    current : float, optional</span>
+<span class="sd">        The current in all the current ring in amps, defaults to 1 amp.</span>
+<span class="sd">    kwargs : matplotlib patch keyword arguments</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loc : tuple</span>
+<span class="sd">        The (R, Z) location of the centroid of the magnet.</span>
+<span class="sd">    width : float, optional</span>
+<span class="sd">        The width of the magnet. Defaults to 0.01 m.</span>
+<span class="sd">    height : float, optional</span>
+<span class="sd">        The height of the magnet. Defaults to 0.01 m.</span>
+<span class="sd">    mu_hat : float, optional</span>
+<span class="sd">        The angle of the magnetic moment of the magnet in degrees from the z</span>
+<span class="sd">        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole</span>
+<span class="sd">        points in the +z direction).</span>
+<span class="sd">    current_prof : integer or array_like</span>
+<span class="sd">        The current profile along the side of the magnet. Defaults to</span>
+<span class="sd">        np.ones(8) i.e. 8 equal surface currents per side.</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in the magnet in amps.</span>
+<span class="sd">    obj_list : list</span>
+<span class="sd">        The list of Current objects that comprise the Magnet</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which</span>
+<span class="sd">        describe the current location and current value for each current in the</span>
+<span class="sd">        Magnet</span>
+<span class="sd">    patch : matplotlib.patches.Patch object</span>
+<span class="sd">        The patch object representing the Magnet for plotting</span>
+<span class="sd">    patchkwargs : dict</span>
+<span class="sd">        The keyword arguments used for the patch attribute</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Magnet</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Magnet.reset"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># set Magnet specific attributes before calling super constructor</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;loc&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">r0</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -469,7 +539,7 @@
         <span class="c1"># make left side currents negative (current setter overridden below)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current</span>
         <span class="c1"># rotate according to muhat direction</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mu_hat</span> <span class="o">=</span> <span class="n">mu_hat</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu_hat</span> <span class="o">=</span> <span class="n">mu_hat</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">loc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -525,27 +595,45 @@
     <span class="k">def</span> <span class="nf">rzdir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">array</span><span class="p">([</span><span class="n">c_obj</span><span class="o">.</span><span class="n">loc</span> <span class="o">+</span> <span class="p">(</span><span class="n">sign</span><span class="p">(</span><span class="n">c_obj</span><span class="o">.</span><span class="n">_current</span><span class="p">))</span> <span class="k">for</span> <span class="n">c_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Magnet.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<div class="viewcode-block" id="Magnet.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate the magnet by a given angle around the magnet centroid</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : float</span>
+<span class="sd">            The angle of the rotation in degrees as measured from the z axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mu_hat</span> <span class="o">+=</span> <span class="n">angle</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Magnet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Magnet.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+<div class="viewcode-block" id="Magnet.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate the magnet by the vector (dr, dz)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dr : float</span>
+<span class="sd">            The displacement in the R direction for the translation</span>
+<span class="sd">        dz : float</span>
+<span class="sd">            The displacement in the Z direction for the translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="n">r0</span> <span class="o">+</span> <span class="n">dr</span><span class="p">,</span> <span class="n">z0</span> <span class="o">+</span> <span class="n">dz</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Magnet.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="c1"># patchcls Polygon needs Nx2 array of verts</span>
+<div class="viewcode-block" id="Magnet.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build argument tuple for patchcls&quot;&quot;&quot;</span>
         <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">/</span> <span class="mf">2.0</span>
         <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">/</span> <span class="mf">2.0</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="o">-</span><span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="o">-</span><span class="n">h</span><span class="p">]]),)</span></div>
 
-<div class="viewcode-block" id="Magnet.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Magnet.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the patch for the magnet&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Magnet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="o">.</span><span class="n">set_transform</span><span class="p">(</span><span class="n">Affine2D</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span><span class="o">.</span><span class="n">rotate_deg_around</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_mu_hat</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Magnet.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Magnet.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Magnet.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Magnet.html#pleiades.Magnet.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Represent the Magnet with a dictionary&quot;&quot;&quot;</span>
         <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;obj_list&#39;</span><span class="p">)</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;patch&#39;</span><span class="p">)</span>
@@ -554,38 +642,74 @@
         <span class="k">return</span> <span class="n">cls_dict</span></div></div>
 
 
-<div class="viewcode-block" id="CurrentArray"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray">[docs]</a><span class="k">class</span> <span class="nc">CurrentArray</span><span class="p">(</span><span class="n">CurrentGroup</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; blah blah blah</span>
-<span class="sd">    Attributes:</span>
-<span class="sd">        _loc</span>
-<span class="sd">        _current</span>
-<span class="sd">        _nr</span>
-<span class="sd">        _nz</span>
-<span class="sd">        _dr</span>
-<span class="sd">        _dz</span>
-<span class="sd">        _angle</span>
-<span class="sd">        _patchcls</span>
-<span class="sd">        _patchargs_dict</span>
-<span class="sd">        _patchkwargs</span>
-<span class="sd">    Properties:</span>
-<span class="sd">        loc</span>
-<span class="sd">        current</span>
-<span class="sd">        nr</span>
-<span class="sd">        nz</span>
-<span class="sd">        dr</span>
-<span class="sd">        dz</span>
-<span class="sd">        angle</span>
-<span class="sd">        patchcls</span>
-<span class="sd">        patchargs_dict</span>
-<span class="sd">        patchkwargs</span>
-<span class="sd">    Methods:</span>
-<span class="sd">        build_patchargs</span>
+<div class="viewcode-block" id="CurrentArray"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray">[docs]</a><span class="k">class</span> <span class="nc">CurrentArray</span><span class="p">(</span><span class="n">CurrentGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A rectangular current array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loc : tuple, optional</span>
+<span class="sd">        The (R, Z) location of the centroid of the CurrentArray. Defaults to</span>
+<span class="sd">        (1.0m, 1.0m).</span>
+<span class="sd">    current : float, optional</span>
+<span class="sd">        The current in each current of the CurrentArray in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float, optional</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float, optional</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float, optional</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float, optional</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    angle : float, optional</span>
+<span class="sd">        The angle of the CurrentArray if it is not aligned with the RZ</span>
+<span class="sd">        coordinate system. The angle is measured in degrees from the z</span>
+<span class="sd">        axis. Defaults to 0 degrees.</span>
+<span class="sd">    patchcls : matplotlib.patches.Patch type</span>
+<span class="sd">        The patch object class representing the CurrentArray for plotting</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loc : tuple</span>
+<span class="sd">        The (R, Z) location of the centroid of the CurrentArray. Defaults to</span>
+<span class="sd">        (1.0m, 1.0m).</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the CurrentArray in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    angle : float</span>
+<span class="sd">        The angle of the CurrentArray if it is not aligned with the RZ</span>
+<span class="sd">        coordinate system. The angle is measured in degrees from the z</span>
+<span class="sd">        axis. Defaults to 0 degrees.</span>
+<span class="sd">    obj_list : list</span>
+<span class="sd">        The list of Current objects that comprise the CurrentArray</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which</span>
+<span class="sd">        describe the current location and current value for each current in the</span>
+<span class="sd">        CurrentArray</span>
+<span class="sd">    patchcls : matplotlib.patches.Patch type</span>
+<span class="sd">        The patch object class representing the CurrentArray for plotting</span>
+<span class="sd">    patch : matplotlib.patches.Patch object</span>
+<span class="sd">        The patch object representing the CurrentArray for plotting</span>
+<span class="sd">    patchkwargs : dict</span>
+<span class="sd">        The keyword arguments used for the patch attribute</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">CurrentArray</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CurrentArray.reset"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;loc&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
         <span class="n">current</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;current&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">nr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;nr&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
@@ -608,7 +732,7 @@
         <span class="n">super_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;rz_pts&quot;</span><span class="p">:</span> <span class="n">rz_pts</span><span class="p">,</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span> <span class="s2">&quot;patchcls&quot;</span><span class="p">:</span> <span class="n">patchcls</span><span class="p">}</span>
         <span class="n">super_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CurrentArray</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">super_kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">angle</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">angle</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">loc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -662,26 +786,47 @@
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CurrentArray</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">deg</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CurrentArray.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentArray.translate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate the CurrentArray by the vector (dr, dz)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dr : float</span>
+<span class="sd">            The displacement in the R direction for the translation</span>
+<span class="sd">        dz : float</span>
+<span class="sd">            The displacement in the Z direction for the translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="n">r0</span> <span class="o">+</span> <span class="n">dr</span><span class="p">,</span> <span class="n">z0</span> <span class="o">+</span> <span class="n">dz</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentArray.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentArray.rotate"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate the CurrentArray by a given angle around the centroid</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : float</span>
+<span class="sd">            The angle of the rotation in degrees as measured from the z axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CurrentArray</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentArray.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentArray.build_patchargs"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray.build_patchargs">[docs]</a>    <span class="k">def</span> <span class="nf">build_patchargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build argument tuple for patchcls&quot;&quot;&quot;</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
         <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dr</span> <span class="o">/</span> <span class="mf">2.0</span>
         <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nz</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dz</span> <span class="o">/</span> <span class="mf">2.0</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="o">-</span><span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="o">-</span><span class="n">h</span><span class="p">]]),)</span></div>
 
-<div class="viewcode-block" id="CurrentArray.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentArray.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the patch for the CurrentArray&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CurrentArray</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span>
         <span class="n">r0</span><span class="p">,</span> <span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="o">.</span><span class="n">set_transform</span><span class="p">(</span><span class="n">Affine2D</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span><span class="o">.</span><span class="n">rotate_deg_around</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">))</span></div>
+        <span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_angle</span>
+        <span class="n">trnsf</span> <span class="o">=</span> <span class="n">Affine2D</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span><span class="o">.</span><span class="n">rotate_deg_around</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="o">-</span><span class="n">angle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="o">.</span><span class="n">set_transform</span><span class="p">(</span><span class="n">trnsf</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CurrentArray.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CurrentArray.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CurrentArray.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CurrentArray.html#pleiades.CurrentArray.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent the CurrentArray with a dictionary&quot;&quot;&quot;</span>
         <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;obj_list&quot;</span><span class="p">)</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">)</span>
@@ -690,11 +835,39 @@
         <span class="k">return</span> <span class="n">cls_dict</span></div></div>
 
 
-<div class="viewcode-block" id="MagnetGroup"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup">[docs]</a><span class="k">class</span> <span class="nc">MagnetGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup">[docs]</a><span class="k">class</span> <span class="nc">MagnetGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a group of dipole magnets.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rz_pts : iterable, optional</span>
+<span class="sd">        Nx2 iterable representing R,Z current centroids. Defaults to None</span>
+<span class="sd">    mu_hats : iterable of float, optional</span>
+<span class="sd">        A list of the angles of the magnetic moment for each magnet in</span>
+<span class="sd">        degrees from the z axis. Defaults to None.</span>
+<span class="sd">    current : float, optional</span>
+<span class="sd">        The current in all the current ring in amps, defaults to 1 amp.</span>
+<span class="sd">    kwargs : dict, optional</span>
+<span class="sd">        A dictionary holding the keyword arguments for each pleiades.Magnet</span>
+<span class="sd">        object.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in the magnet in amps.</span>
+<span class="sd">    obj_list : list</span>
+<span class="sd">        The list of Current objects that comprise the Magnet</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 array whos rows are rzdir[i, :] = rloc, zloc, current which</span>
+<span class="sd">        describe the current location and current value for each current in the</span>
+<span class="sd">        Magnet</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        The patch objects representing the MagnetGroup for plotting</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">MagnetGroup</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MagnetGroup.reset"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">rz_pts</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;rz_pts&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]))</span>
         <span class="n">mu_hats</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mu_hats&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">mu_hats</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -703,8 +876,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_current</span> <span class="o">=</span> <span class="n">current</span>
         <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">rz_pts</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">d</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;rz_pts shape: </span><span class="si">{0}</span><span class="s2"> is invalid, must be Nx2&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rz_pts</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Magnet</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">mu_hat</span><span class="o">=</span><span class="n">mhat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">mhat</span> <span class="ow">in</span> <span class="n">vstack</span><span class="p">((</span><span class="n">rz_pts</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">mu_hats</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">]</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;rz_pts shape: {(n, d)} is invalid, must be Nx2&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Magnet</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">mu_hat</span><span class="o">=</span><span class="n">mhat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">mhat</span> <span class="ow">in</span> <span class="n">vstack</span><span class="p">((</span><span class="n">rz_pts</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">mu_hats</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -736,31 +910,55 @@
     <span class="k">def</span> <span class="nf">patches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">m_obj</span><span class="o">.</span><span class="n">patch</span> <span class="k">for</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">]</span>
 
-<div class="viewcode-block" id="MagnetGroup.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup.update_patch"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.update_patch">[docs]</a>    <span class="k">def</span> <span class="nf">update_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Udate the patches for the MagnetGroup&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">m_obj</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MagnetGroup.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot magnets</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axis on which to plot the magnets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">m_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MagnetGroup.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot current locations with markers for +/-</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axis on which to plot the current location</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">m_obj</span><span class="o">.</span><span class="n">plot_currents</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MagnetGroup.rebuild"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.rebuild">[docs]</a>    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup.rebuild"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.rebuild">[docs]</a>    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the MAgnetGroup based on the key, value pair passed in&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">:</span>
             <span class="n">m_obj</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MagnetGroup.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnetGroup.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent the MagnetGroup as a dictionary&quot;&quot;&quot;</span>
         <span class="n">magnets</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">m_obj</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span><span class="p">)}</span>
         <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;magnets&quot;</span><span class="p">:</span> <span class="n">magnets</span><span class="p">}</span>
         <span class="n">cls_dict</span><span class="p">[</span><span class="s2">&quot;current&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current</span>
         <span class="n">cls_dict</span><span class="p">[</span><span class="s2">&quot;cls&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">cls_dict</span></div>
 
-<div class="viewcode-block" id="MagnetGroup.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.MagnetGroup.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MagnetGroup.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.MagnetGroup.html#pleiades.MagnetGroup.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cls_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create MagnetGroup instance from a dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cls_dict : dict</span>
+<span class="sd">            The dictionary from which to construct a Current.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">inst</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
         <span class="n">current</span> <span class="o">=</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;current&quot;</span><span class="p">)</span>
         <span class="n">inst</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Magnet</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">cls_dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">cls_dict</span> <span class="ow">in</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;magnets&quot;</span><span class="p">)]</span>
@@ -768,9 +966,48 @@
         <span class="k">return</span> <span class="n">inst</span></div></div>
 
 
-<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="c1"># Components are like HH coils or Mirror Coils or Vessel Magnets</span>
-    <span class="c1"># This is the minimum scale that has its own greens function - one for each group</span>
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Container for representing multiple sets of objects and assigning a</span>
+<span class="sd">    Green&#39;s function to the object. Components are like HH coils or Mirror</span>
+<span class="sd">    Coils or Vessel Magnets. This is the minimum scale that has its own Green&#39;s</span>
+<span class="sd">    function - one for each group.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    num_groups : int</span>
+<span class="sd">        Number of groups that make up the Component</span>
+<span class="sd">    currents : list of float</span>
+<span class="sd">        A list of currents representing the current in each group in the</span>
+<span class="sd">        Component</span>
+<span class="sd">    nprocs : int</span>
+<span class="sd">        The number of processors to use to compute the Green&#39;s functions</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        A list of all the patches that represent the Component</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+<span class="sd">    gpsi : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic flux psi</span>
+<span class="sd">    gBR : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BR</span>
+<span class="sd">    gBZ : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BZ</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        Magnetic flux evaluated on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        Magnetic field component BR evaluated on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        Magnetic field component BZ evaluated on the grid</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="kc">None</span>
@@ -780,8 +1017,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_patch_mask</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Component.compute_greens"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.compute_greens">[docs]</a>    <span class="k">def</span> <span class="nf">compute_greens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+<div class="viewcode-block" id="Component.compute_greens"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.compute_greens">[docs]</a>    <span class="k">def</span> <span class="nf">compute_greens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the Green&#39;s functions for flux (psi) and BR and BZ&quot;&quot;&quot;</span>
+        <span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="n">proc_max</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
         <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_groups</span>
         <span class="n">gpsi</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
@@ -921,32 +1159,59 @@
     <span class="k">def</span> <span class="nf">BZ</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gBZ</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currents</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Component.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot current locations with markers for +/- for all the objects in</span>
+<span class="sd">        the Component</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axis on which to plot the current location</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
             <span class="n">group</span><span class="o">.</span><span class="n">plot_currents</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Component.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot each group including patches for all the objects in the</span>
+<span class="sd">        Component</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.Axes object</span>
+<span class="sd">            The axis on which to plot the current location</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
             <span class="n">group</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Component.update_patches"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.update_patches">[docs]</a>    <span class="k">def</span> <span class="nf">update_patches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.update_patches"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.update_patches">[docs]</a>    <span class="k">def</span> <span class="nf">update_patches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the patches for the Component&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="p">:</span>
             <span class="n">group</span><span class="o">.</span><span class="n">update_patch</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Component.update"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.update"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the patches and Green&#39;s function for the component&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_greens</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_patches</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Component.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<div class="viewcode-block" id="Component.to_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent the component as a dictionary&quot;&quot;&quot;</span>
+        <span class="n">cls_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span> <span class="n">value</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">):</span>
             <span class="n">cls_dict</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="n">cls_dict</span><span class="p">[</span><span class="s2">&quot;cls&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">cls_dict</span></div>
 
-<div class="viewcode-block" id="Component.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Component.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Component.from_dict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Component.html#pleiades.Component.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cls_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create Component from a dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cls_dict : dict</span>
+<span class="sd">            The dictionary from which to construct a Component.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">cls_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">)</span>
         <span class="n">comp_cls</span> <span class="o">=</span> <span class="n">get_class</span><span class="p">(</span><span class="n">cls_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cls&quot;</span><span class="p">))</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
@@ -966,12 +1231,92 @@
         <span class="k">return</span> <span class="n">obj</span></div></div>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">Added 9-18-17 by Roger Waleffe</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Coil"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Coil.html#pleiades.Coil">[docs]</a><span class="k">class</span> <span class="nc">Coil</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A component representing a single Coil</span>
 
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
 
-<div class="viewcode-block" id="Coil"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Coil">[docs]</a><span class="k">class</span> <span class="nc">Coil</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    num_groups : int</span>
+<span class="sd">        Number of groups that make up the Component</span>
+<span class="sd">    currents : list of float</span>
+<span class="sd">        A list of currents representing the current in each group in the</span>
+<span class="sd">        Component</span>
+<span class="sd">    nprocs : int</span>
+<span class="sd">        The number of processors to use to compute the Green&#39;s functions</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        A list of all the patches that represent the Component</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+<span class="sd">    gpsi : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic flux psi</span>
+<span class="sd">    gBR : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BR</span>
+<span class="sd">    gBZ : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BZ</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        Magnetic flux evaluated on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        Magnetic field component BR evaluated on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        Magnetic field component BZ evaluated on the grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Coil</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">r0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;r0&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -1062,7 +1407,92 @@
             <span class="n">c_arr</span><span class="o">.</span><span class="n">dz</span> <span class="o">=</span> <span class="n">new_dz</span></div>
 
 
-<div class="viewcode-block" id="CoilPack"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.CoilPack">[docs]</a><span class="k">class</span> <span class="nc">CoilPack</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="CoilPack"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.CoilPack.html#pleiades.CoilPack">[docs]</a><span class="k">class</span> <span class="nc">CoilPack</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A component representing a single CoilPack</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    num_groups : int</span>
+<span class="sd">        Number of groups that make up the Component</span>
+<span class="sd">    currents : list of float</span>
+<span class="sd">        A list of currents representing the current in each group in the</span>
+<span class="sd">        Component</span>
+<span class="sd">    nprocs : int</span>
+<span class="sd">        The number of processors to use to compute the Green&#39;s functions</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        A list of all the patches that represent the Component</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+<span class="sd">    gpsi : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic flux psi</span>
+<span class="sd">    gBR : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BR</span>
+<span class="sd">    gBZ : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BZ</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        Magnetic flux evaluated on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        Magnetic field component BR evaluated on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        Magnetic field component BZ evaluated on the grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CoilPack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">r0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;r0&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -1159,7 +1589,92 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="ZSymmCoilSet"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.ZSymmCoilSet">[docs]</a><span class="k">class</span> <span class="nc">ZSymmCoilSet</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="ZSymmCoilSet"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.ZSymmCoilSet.html#pleiades.ZSymmCoilSet">[docs]</a><span class="k">class</span> <span class="nc">ZSymmCoilSet</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A component representing a coil set that is symmetric about Z=0</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        The R location of the centroid of the Coil</span>
+<span class="sd">    z0 : float</span>
+<span class="sd">        The Z location of the centroid of the Coil</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    num_groups : int</span>
+<span class="sd">        Number of groups that make up the Component</span>
+<span class="sd">    currents : list of float</span>
+<span class="sd">        A list of currents representing the current in each group in the</span>
+<span class="sd">        Component</span>
+<span class="sd">    nprocs : int</span>
+<span class="sd">        The number of processors to use to compute the Green&#39;s functions</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        A list of all the patches that represent the Component</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+<span class="sd">    gpsi : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic flux psi</span>
+<span class="sd">    gBR : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BR</span>
+<span class="sd">    gBZ : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BZ</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        Magnetic flux evaluated on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        Magnetic field component BR evaluated on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        Magnetic field component BZ evaluated on the grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ZSymmCoilSet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">r0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;r0&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -1253,7 +1768,70 @@
             <span class="n">c_arr</span><span class="o">.</span><span class="n">dz</span> <span class="o">=</span> <span class="n">new_dz</span></div>
 
 
-<div class="viewcode-block" id="HelmholtzCoil"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.HelmholtzCoil">[docs]</a><span class="k">class</span> <span class="nc">HelmholtzCoil</span><span class="p">(</span><span class="n">ZSymmCoilSet</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">HelmholtzCoil</span><span class="p">(</span><span class="n">ZSymmCoilSet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Helmholtz coil set</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float, optional</span>
+<span class="sd">        The radius of the Helmholtz coil set. Defaults to 1.0m</span>
+<span class="sd">    z0 : float, optional</span>
+<span class="sd">        The separation of the Helmholtz coil set. Defaults to 1.0m</span>
+<span class="sd">    **kwargs : dict, optional</span>
+<span class="sd">        Keyword arguments for pleiades.ZSymmCoilSet</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : float, optional</span>
+<span class="sd">        The radius of the Helmholtz coil set. Defaults to 1.0m</span>
+<span class="sd">    z0 : float, optional</span>
+<span class="sd">        The separation of the Helmholtz coil set. Defaults to 1.0m</span>
+<span class="sd">    current : float</span>
+<span class="sd">        The current in each current of the Coil in amps (i.e power</span>
+<span class="sd">        supply current). Defaults to 1 amp.</span>
+<span class="sd">    nr : float</span>
+<span class="sd">        The number of current filaments in the R direction. Defaults to 10.</span>
+<span class="sd">    nz : float</span>
+<span class="sd">        The number of current filaments in the Z direction. Defaults to 10.</span>
+<span class="sd">    dr : float</span>
+<span class="sd">        The distance between current filaments in the R direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        The distance between current filaments in the Z direction. Defaults to</span>
+<span class="sd">        0.01 m</span>
+<span class="sd">    groups : list</span>
+<span class="sd">        A list of all the groups that comprise this Component</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of all the names for the groups that comprise this Component.</span>
+<span class="sd">        Each label is also accessible as an attribute on the Component as well.</span>
+<span class="sd">    num_groups : int</span>
+<span class="sd">        Number of groups that make up the Component</span>
+<span class="sd">    currents : list of float</span>
+<span class="sd">        A list of currents representing the current in each group in the</span>
+<span class="sd">        Component</span>
+<span class="sd">    nprocs : int</span>
+<span class="sd">        The number of processors to use to compute the Green&#39;s functions</span>
+<span class="sd">    patches : list of matplotlib.patches.Patch objects</span>
+<span class="sd">        A list of all the patches that represent the Component</span>
+<span class="sd">    patch_mask : iterable of bool</span>
+<span class="sd">        A list of booleans of the same length as the number of groups where True</span>
+<span class="sd">        indicates to hide the patch for that particular group.</span>
+<span class="sd">    grid : pleiades.Grid instance</span>
+<span class="sd">        A grid on which to compute the Green&#39;s functions for flux and magnetic</span>
+<span class="sd">        fields</span>
+<span class="sd">    gpsi : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic flux psi</span>
+<span class="sd">    gBR : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BR</span>
+<span class="sd">    gBZ : np.array</span>
+<span class="sd">        Green&#39;s function for magnetic field component BZ</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        Magnetic flux evaluated on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        Magnetic field component BR evaluated on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        Magnetic field component BZ evaluated on the grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">r0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;r0&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="c1"># throw away z0 if specified</span>
@@ -1272,10 +1850,44 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">=</span> <span class="n">new_r0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_z0</span> <span class="o">=</span> <span class="n">new_r0</span> <span class="o">/</span> <span class="mf">2.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_z0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z0</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z0</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Configuration"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration">[docs]</a><span class="k">class</span> <span class="nc">Configuration</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Configuration"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.Configuration.html#pleiades.Configuration">[docs]</a><span class="k">class</span> <span class="nc">Configuration</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A container for a full configuration of magnets for an experiment</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    components : list</span>
+<span class="sd">        A list of pleiades.Component objects to be added to the configuration</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        A list of the names for the components being added</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        A filename for the Configuration</span>
+<span class="sd">    grid : pleiades.Grid object</span>
+<span class="sd">        A grid on which to compute Green&#39;s functions and fields</span>
+<span class="sd">    artists :</span>
+<span class="sd">        A list of matplotlib patch objects </span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grid : pleiades.Grid object</span>
+<span class="sd">        A grid on which to compute Green&#39;s functions and fields</span>
+<span class="sd">    R : np.array</span>
+<span class="sd">        The R locations of the grid</span>
+<span class="sd">    Z : np.array</span>
+<span class="sd">        The Z locations of the grid</span>
+<span class="sd">    psi : np.array</span>
+<span class="sd">        The psi values on the grid</span>
+<span class="sd">    BR : np.array</span>
+<span class="sd">        The BR values on the grid</span>
+<span class="sd">    BZ : np.array</span>
+<span class="sd">        The BZ values on the grid</span>
+<span class="sd">    patches : list</span>
+<span class="sd">        A list of patch objects for the configuration</span>
+<span class="sd">    patch_coll : matplotlib.patches.PatchCollection</span>
+<span class="sd">        A patch collection for easier adding to matplotlib axes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;components&quot;</span><span class="p">,</span> <span class="p">[])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">[])</span>
@@ -1326,36 +1938,36 @@
     <span class="k">def</span> <span class="nf">patch_coll</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">PatchCollection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">,</span> <span class="n">match_original</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Configuration.add_component"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.add_component">[docs]</a>    <span class="k">def</span> <span class="nf">add_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">component</span><span class="p">)</span></div>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">component</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Configuration.reset_grid"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.reset_grid">[docs]</a>    <span class="k">def</span> <span class="nf">reset_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span></div>
+    <span class="k">def</span> <span class="nf">reset_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid</span>
 
-<div class="viewcode-block" id="Configuration.update"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_grid</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
-            <span class="n">comp</span><span class="o">.</span><span class="n">update_patches</span><span class="p">()</span></div>
+            <span class="n">comp</span><span class="o">.</span><span class="n">update_patches</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Configuration.plot_currents"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.plot_currents">[docs]</a>    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">comp</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
-                <span class="n">group</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
+                <span class="n">group</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Configuration.plot_psi"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.plot_psi">[docs]</a>    <span class="k">def</span> <span class="nf">plot_psi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">plot_psi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Configuration.plot_modB"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.plot_modB">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BR</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">BZ</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">plot_modB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BR</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">BZ</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Configuration.plot"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
             <span class="n">comp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">PatchCollection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artists</span><span class="p">,</span> <span class="n">match_original</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">PatchCollection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artists</span><span class="p">,</span> <span class="n">match_original</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Configuration.save"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.Configuration.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1363,20 +1975,22 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div></div>
+            <span class="n">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="load_config"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.load_config">[docs]</a><span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load a configuration from a pickle file&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.p&#39;</span><span class="p">,</span> <span class="s1">&#39;.pickle&#39;</span><span class="p">)):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">config</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;HDF5 compatibility not implemented yet&quot;</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
-    <span class="k">return</span> <span class="n">config</span></div>
+    <span class="k">return</span> <span class="n">config</span>
 
 
-<div class="viewcode-block" id="save_config"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.save_config">[docs]</a><span class="k">def</span> <span class="nf">save_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">save_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a configuration to a pickle file&quot;&quot;&quot;</span>
     <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.p&#39;</span><span class="p">,</span> <span class="s1">&#39;.pickle&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
@@ -1387,15 +2001,25 @@
     <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;HDF5 compatibility not implemented yet&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported file extension&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported file extension&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_get_greens</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rzdir</span><span class="p">,</span> <span class="n">out_q</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="c1"># private function assumes all rzdir have the same current</span>
-    <span class="c1"># resulting in a 1D greens function, used internally by </span>
-    <span class="c1"># component class. For computing your own green&#39;s functions </span>
-    <span class="c1"># use the public version</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Helper function for computing Green&#39;s functions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R : np.array</span>
+<span class="sd">        A 1D np.array representing the R positions of the grid</span>
+<span class="sd">    Z : np.array</span>
+<span class="sd">        A 1D np.array representing the Z positions of the grid</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 np.array representing the r, z positions and sign of the current</span>
+<span class="sd">        in all the current filaments.</span>
+<span class="sd">    out_q: multiprocessing.Queue object?</span>
+<span class="sd">        Internally used for faster processing of Green&#39;s functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
     <span class="n">gpsi</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
     <span class="n">gBR</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -1430,8 +2054,29 @@
     <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">out_tup</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_greens"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.get_greens">[docs]</a><span class="k">def</span> <span class="nf">get_greens</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rzdir</span><span class="p">,</span> <span class="n">out_q</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_greens</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rzdir</span><span class="p">,</span> <span class="n">out_q</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute Green&#39;s functions for psi, BR, and BZ</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R : np.array</span>
+<span class="sd">        A 1D np.array representing the R positions of the grid</span>
+<span class="sd">    Z : np.array</span>
+<span class="sd">        A 1D np.array representing the Z positions of the grid</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 np.array representing the r, z positions and sign of the current</span>
+<span class="sd">        in all the current filaments.</span>
+<span class="sd">    out_q: multiprocessing.Queue object?</span>
+<span class="sd">        Internally used for faster processing of Green&#39;s functions</span>
+<span class="sd">    out_idx: int?</span>
+<span class="sd">        Internally used for faster processing of Green&#39;s functions</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out_tup : tuple</span>
+<span class="sd">        Tuple of 3 elements (gpsi, gBR, gBZ) for the 3 Green&#39;s functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
     <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rzdir</span><span class="p">)</span>
     <span class="n">gpsi</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
     <span class="n">gBR</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
@@ -1466,11 +2111,32 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">out_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;I don&#39;t know where to put this output, please specify out_idx&quot;</span><span class="p">)</span>
-        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">out_idx</span><span class="p">,)</span> <span class="o">+</span> <span class="n">out_tup</span><span class="p">)</span></div>
+        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">out_idx</span><span class="p">,)</span> <span class="o">+</span> <span class="n">out_tup</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="compute_greens"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.compute_greens">[docs]</a><span class="k">def</span> <span class="nf">compute_greens</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rzdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nprocs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+<div class="viewcode-block" id="compute_greens"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.compute_greens.html#pleiades.compute_greens">[docs]</a><span class="k">def</span> <span class="nf">compute_greens</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rzdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nprocs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute Green&#39;s functions for psi, BR, and BZ</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R : np.array</span>
+<span class="sd">        A 1D np.array representing the R positions of the grid</span>
+<span class="sd">    Z : np.array</span>
+<span class="sd">        A 1D np.array representing the Z positions of the grid</span>
+<span class="sd">    rzdir : np.array</span>
+<span class="sd">        An Nx3 np.array representing the r, z positions and sign of the current</span>
+<span class="sd">        in all the current filaments.</span>
+<span class="sd">    out_q: multiprocessing.Queue object?</span>
+<span class="sd">        Internally used for faster processing of Green&#39;s functions</span>
+<span class="sd">    out_idx: int?</span>
+<span class="sd">        Internally used for faster processing of Green&#39;s functions</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out_tup : tuple</span>
+<span class="sd">        Tuple of 3 elements (gpsi, gBR, gBZ) for the 3 Green&#39;s functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
     <span class="n">proc_max</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">rzdir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">rzdir</span> <span class="o">=</span> <span class="n">vstack</span><span class="p">((</span><span class="n">R</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">))))</span><span class="o">.</span><span class="n">T</span>
@@ -1504,13 +2170,13 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">gpsi</span><span class="p">,</span> <span class="n">gBR</span><span class="p">,</span> <span class="n">gBZ</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_class"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.core.get_class">[docs]</a><span class="k">def</span> <span class="nf">get_class</span><span class="p">(</span><span class="n">cls_str</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_class</span><span class="p">(</span><span class="n">cls_str</span><span class="p">):</span>
     <span class="n">parts</span> <span class="o">=</span> <span class="n">cls_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
     <span class="n">module</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">m</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
         <span class="n">m</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">m</span></div>
+    <span class="k">return</span> <span class="n">m</span>
 </pre></div>
 
            </div>

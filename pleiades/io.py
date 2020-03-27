@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from pleiades.helpers import *
+from pleiades.analysis import *
 
 class EQDSK(dict):
     def __init__(self,fname=None):

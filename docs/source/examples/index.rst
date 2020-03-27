@@ -6,9 +6,9 @@ Examples
 
 Stuff?
 
-------------------
+------------------------
 Introduction to Pleiades
-------------------
+------------------------
 
 .. toctree::
     :maxdepth: 1

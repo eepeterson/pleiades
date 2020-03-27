@@ -59,7 +59,7 @@
 
           
             
-            <img src="../../_static/pleiades_logo.png" class="logo" alt="Logo"/>
+            <img src="../../_static/pleiades_logo.svg" class="logo" alt="Logo"/>
           
           </a>
 
@@ -156,22 +156,22 @@
             
   <h1>Source code for pleiades.io</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">pleiades.helpers</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pleiades.analysis</span> <span class="k">import</span> <span class="o">*</span>
 
-<div class="viewcode-block" id="EQDSK"><a class="viewcode-back" href="../../pythonapi/io.html#pleiades.io.EQDSK">[docs]</a><span class="k">class</span> <span class="nc">EQDSK</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">EQDSK</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">read_eqdsk</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>
 
-<div class="viewcode-block" id="EQDSK.write_eqdsk"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.io.EQDSK.write_eqdsk">[docs]</a>    <span class="k">def</span> <span class="nf">write_eqdsk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">write_eqdsk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">pass</span></div>
+            <span class="k">pass</span>
 
-<div class="viewcode-block" id="EQDSK.read_eqdsk"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.io.EQDSK.read_eqdsk">[docs]</a>    <span class="k">def</span> <span class="nf">read_eqdsk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">read_eqdsk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">pass</span></div></div>
+            <span class="k">pass</span>
 
 <span class="c1">#class MirrorEQDSK(EQDSK):</span>
 <span class="c1">#    def __init__(self,fname=None):</span>
@@ -190,7 +190,7 @@
 <span class="c1">#        f.write(&quot;\n&quot;+&quot;&quot;.join(&quot;{: 16.9E}&quot;.format(xi) for xi in [0,0,0,0,0]))</span>
 
 
-<div class="viewcode-block" id="write_eqdsk"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.io.write_eqdsk">[docs]</a><span class="k">def</span> <span class="nf">write_eqdsk</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">psi</span><span class="p">,</span><span class="n">plas_currents</span><span class="p">,</span><span class="n">fname</span><span class="p">,</span><span class="n">title</span><span class="p">):</span>
+<div class="viewcode-block" id="write_eqdsk"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.write_eqdsk.html#pleiades.write_eqdsk">[docs]</a><span class="k">def</span> <span class="nf">write_eqdsk</span><span class="p">(</span><span class="n">Rho</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">psi</span><span class="p">,</span><span class="n">plas_currents</span><span class="p">,</span><span class="n">fname</span><span class="p">,</span><span class="n">title</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">26</span><span class="p">:</span>
         <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">26</span><span class="p">]</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;cursign,nnr,nnz,nnv = &quot;</span>
@@ -276,7 +276,8 @@
         <span class="c1">## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lim_ves_pairs</span><span class="p">)))</span></div>
 
-<div class="viewcode-block" id="write_eqdsk_fromdict"><a class="viewcode-back" href="../../pythonapi/generated/pleiades.html#pleiades.io.write_eqdsk_fromdict">[docs]</a><span class="k">def</span> <span class="nf">write_eqdsk_fromdict</span><span class="p">(</span><span class="n">eq_dict</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">write_eqdsk_fromdict</span><span class="p">(</span><span class="n">eq_dict</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
     <span class="n">cursign</span><span class="p">,</span><span class="n">nnr</span><span class="p">,</span><span class="n">nnz</span><span class="p">,</span><span class="n">nnv</span> <span class="o">=</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;cursign&quot;</span><span class="p">],</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnr&quot;</span><span class="p">],</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnz&quot;</span><span class="p">],</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;nnv&quot;</span><span class="p">]</span>
     <span class="n">rbox</span><span class="p">,</span><span class="n">zbox</span> <span class="o">=</span> <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;rbox&quot;</span><span class="p">],</span><span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;zbox&quot;</span><span class="p">]</span>
@@ -319,9 +320,9 @@
         <span class="c1">## line 12 -- write number of coordinate pairs for limit surface and vessel surface</span>
         <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0:5d}{1:5d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nlim_pairs</span><span class="p">,</span><span class="n">nves_pairs</span><span class="p">)))</span>
         <span class="c1">## line 13 -- write list of R,Z pairs for limiter surface, then vessel surface</span>
-        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lim_ves_pairs</span><span class="p">)))</span></div>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{: 16.9E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lim_ves_pairs</span><span class="p">)))</span>
 
-<div class="viewcode-block" id="read_eqdsk"><a class="viewcode-back" href="../../pythonapi/io.html#pleiades.io.read_eqdsk">[docs]</a><span class="k">def</span> <span class="nf">read_eqdsk</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_eqdsk</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    line 1 -- read grid information: title cursign, nnr, nnz, nnv</span>
 <span class="sd">    line 2 -- read rbox,zbox,0,0,0</span>
@@ -395,7 +396,7 @@
         <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;lim_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lim_pairs</span>
         <span class="n">eq_dict</span><span class="p">[</span><span class="s2">&quot;ves_pairs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ves_pairs</span>
 
-        <span class="k">return</span> <span class="n">eq_dict</span></div>
+        <span class="k">return</span> <span class="n">eq_dict</span>
 
 
 </pre></div>

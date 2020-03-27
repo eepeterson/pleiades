@@ -1,11 +1,12 @@
-from pleiades.core import *
-import pleiades.grids
 import numpy as np
-from matplotlib.patches import Polygon,Wedge
-from matplotlib.collections import PatchCollection
-import matplotlib as mpl
 import os
 import warnings
+from matplotlib.patches import Polygon, Wedge
+from matplotlib.collections import PatchCollection
+import matplotlib as mpl
+
+from pleiades import (Current, CurrentGroup, Magnet, Component, ZSymmCoilSet,
+                      MagnetGroup, CurrentArray, Configuration)
 
 class TREXcoil(CurrentGroup):
     def __init__(self,**kwargs):
@@ -51,7 +52,7 @@ class TREXCoils(Component):
         super(TREXCoils,self).__init__()
         z0 = float(kwargs.pop("z0",1.1757))
         labels = kwargs.pop("labels",["Ncoil","Scoil"])
-        currents = array(kwargs.pop("currents",(1,1)),dtype="float")
+        currents = np.array(kwargs.pop("currents",(1,1)),dtype="float")
         nprocs = kwargs.pop("nprocs",[4,4])
         patch_mask = kwargs.pop("patch_mask",[0,0])
         grid = kwargs.pop("grid",None)
@@ -300,8 +301,6 @@ class PCX_magCage(object):
             m.set_currents(current_mags)
 
 
-
-
 class PhilipsMRI(object):
     def __init__(self, loc, current):
         rho0, z0 = loc
@@ -316,20 +315,25 @@ class PhilipsMRI(object):
         length = 1.618
         verts = np.array([[inner_r,z0+length/2.0],[outer_r,z0+length/2.0],[outer_r,z0-length/2.0],[inner_r,z0-length/2.0]])
         self.cryo = Polygon(verts,closed=True,fc="None",ec="k",lw=2,joinstyle="round")
-        self.coil = RectCurrentArray((rho0,z0-z1),nrho,nz,delta_rho,delta_z,current,fc=".45",units="m")
+        self.coil = CurrentArray((rho0,z0-z1),nrho,nz,delta_rho,delta_z,current,fc=".45",units="m")
         self.patches = [self.cryo,self.coil.patch]
 
     def get_current_tuples(self,frame="rhoz",units="m"):
         return self.coil.get_current_tuples(frame=frame,units=units)
 
-def build_pcx(vessel=True, HH=(False, 0, 0)):
-    """"Return field objects and patches representing PCX (modified copy of build_wipal).
 
-    Kwargs:
-        vessel (bool): boolean to include vessel magnets or not, default True
-        HH (tuple): tuple of (bool,float,float) representing whether or not to include
-            helmholtz coil set and, if so, how much current goes into the upper and lower coil, respectively
-            default (False,0,0)
+def build_pcx(vessel=True, HH=(False, 0, 0)):
+    """"Return field objects and patches representing PCX (modified copy of
+    build_wipal).
+
+    Parameters
+    ----------
+    vessel : bool
+        Boolean to include vessel magnets or not, default True
+    HH : tuple
+        Tuple of (bool,float,float) representing whether or not to include
+        helmholtz coil set and, if so, how much current goes into the upper and
+        lower coil, respectively default (False,0,0)
     """
     patches = []
     current_objs = []
@@ -351,14 +355,14 @@ def build_gdt():
     n_z = 100
     delta_rho = 1
     delta_z = 1
-    coil_1 = RectCurrentArray((rho0, -325), n_rho, n_z, delta_rho, delta_z, 1500, units="cm")
-    coil_2 = RectCurrentArray((rho0, -215), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
-    coil_3 = RectCurrentArray((rho0, -105), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
-    coil_4 = RectCurrentArray((rho0, 5), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
-    coil_5 = RectCurrentArray((rho0, 115), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
-    coil_6 = RectCurrentArray((rho0, 225), n_rho, n_z, delta_rho, delta_z, 1500, units="cm")
-    coil_7 = RectCurrentArray((rho0 / 2.0, -395), 10, 50, delta_rho, delta_z, 30000, units="cm")
-    coil_8 = RectCurrentArray((rho0 / 2.0, 345), 10, 50, delta_rho, delta_z, 30000, units="cm")
+    coil_1 = CurrentArray((rho0, -325), n_rho, n_z, delta_rho, delta_z, 1500, units="cm")
+    coil_2 = CurrentArray((rho0, -215), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
+    coil_3 = CurrentArray((rho0, -105), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
+    coil_4 = CurrentArray((rho0, 5), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
+    coil_5 = CurrentArray((rho0, 115), n_rho, n_z, delta_rho, delta_z, 500, units="cm")
+    coil_6 = CurrentArray((rho0, 225), n_rho, n_z, delta_rho, delta_z, 1500, units="cm")
+    coil_7 = CurrentArray((rho0 / 2.0, -395), 10, 50, delta_rho, delta_z, 30000, units="cm")
+    coil_8 = CurrentArray((rho0 / 2.0, 345), 10, 50, delta_rho, delta_z, 30000, units="cm")
     current_objs = [coil_1, coil_2, coil_3, coil_4, coil_5, coil_6, coil_7, coil_8]
     patches = [coil_1.patch, coil_2.patch, coil_3.patch, coil_4.patch, coil_5.patch, coil_6.patch, coil_7.patch,
                coil_8.patch]

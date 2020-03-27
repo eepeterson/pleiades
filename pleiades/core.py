@@ -1038,8 +1038,8 @@ class Component(object):
 
     def to_dict(self):
         """Represent the component as a dictionary"""
-        cls_dict = dict(key.strip("_"): value
-                        for key, value in self.__dict__.items())
+        cls_dict = {key.strip("_"): value
+                    for key, value in self.__dict__.items()}
         cls_dict.pop(label, None)
         for group, label in zip(self._groups, self._labels):
             cls_dict[label] = group.to_dict()
