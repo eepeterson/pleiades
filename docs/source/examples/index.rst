@@ -4,11 +4,12 @@
 Examples
 ========
 
-Stuff?
+Here are some (1 right now) example Jupyter Notebooks for showing users how to
+get started with the Pleiades package.
 
-------------------------
-Introduction to Pleiades
-------------------------
+-------------
+General Usage
+-------------
 
 .. toctree::
     :maxdepth: 1

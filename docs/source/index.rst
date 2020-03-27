@@ -16,5 +16,5 @@ Plasma Experiment Iteratively Advanced Design and Simulation
     quickinstall
     examples/index
     pythonapi/index
+    gallery
     resources
-

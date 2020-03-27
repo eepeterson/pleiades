@@ -1,8 +1,8 @@
-.. _notebook_sparc_build:
+.. _notebook_pleiades_intro:
 
-===================
-Using Pleiades
-===================
+============
+Introduction
+============
 
 .. only:: html
 
