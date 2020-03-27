@@ -33,20 +33,18 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # On Read the Docs, we need to mock a few third-party modules so we don't get
 # ImportErrors when building documentation
-from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-MOCK_MODULES = ['numpy', 'scipy.special', 'multiprocessing',
-                'matplotlib.patches', 'matplotlib.collections',
-                'matplotlib.transforms', 'numbers', 'pickle', 'scipy',
-                'matplotlib.pyplot', 'os', 'warnings', 'matplotlib',
-                'scipy.integrate', 'scipy.interpolate', 'scipy.optimize',
-                'scipy.spatial', 'matplotlib.path']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+#if on_rtd:
+#    from unittest.mock import MagicMock
+#    MOCK_MODULES = ['numpy', 'scipy.special', 'multiprocessing',
+#                    'matplotlib.patches', 'matplotlib.collections',
+#                    'matplotlib.transforms', 'numbers', 'pickle', 'scipy',
+#                    'matplotlib.pyplot', 'os', 'warnings', 'matplotlib',
+#                    'scipy.integrate', 'scipy.interpolate', 'scipy.optimize',
+#                    'scipy.spatial', 'matplotlib.path']
+#    sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+#
+#    import numpy as np
+#    np.ndarray = MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
