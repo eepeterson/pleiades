@@ -23,10 +23,11 @@ project = 'pleiades'
 copyright = '2020, Ethan Peterson'
 author = 'Ethan Peterson'
 
-# The short X.Y version
-version = ''
+# Get version from __init__.py
+with open('../../pleiades/__init__.py', 'r') as f:
+    version = f.readlines()[-1].split()[-1].strip("'")
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = version
 
 # Determine if we're on Read the Docs server
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
