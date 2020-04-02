@@ -1,6 +1,6 @@
-from pleiades.core import *
+from pleiades.current_sets import *
+from pleiades.device import *
 from pleiades.io import *
-from pleiades.wipplsystems import *
 from pleiades.eq_solve import *
 from pleiades.grids import *
 

@@ -1,6 +1,5 @@
 from abc import ABCMeta
 import numpy as np
-from filaments import CurrentFilamentSet
 from matplotlib.collections import PatchCollection
 
 

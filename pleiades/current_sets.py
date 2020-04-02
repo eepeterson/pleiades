@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from warnings import warn, simplefilter
 import math
 import numpy as np
@@ -41,6 +41,8 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         positive and negative currents in an object at the same time as well as
         current profile shaping in the case of permanent magnets. Defaults to
         1 for every location.
+    **kwargs
+        Any matplotlib.patches.PathPatch keyword arguments
 
     Attributes
     ----------
@@ -74,9 +76,10 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         for this CurrentFilamentSet.
     """
 
-    def __init__(self, current=1., weights=None):
+    def __init__(self, current=1., weights=None, **kwargs):
         self.current = current
         self.weights = weights
+        self.patch_kw = kwargs
 
     @property
     def current(self):
@@ -86,14 +89,20 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     def weights(self):
         return self._weights
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def rz_pts(self):
         pass
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def npts(self):
+        pass
+
+    @abstractproperty
+    def verts(self):
+        pass
+
+    @abstractproperty
+    def _codes(self):
         pass
 
     @property
@@ -112,6 +121,10 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         cw = self.current*self.weights
         cw[np.abs(cw) < 1E-12] = 0
         return ['' if cwi == 0 else 'x' if cwi > 0 else 'o' for cwi in cw]
+
+    @property
+    def patch(self):
+        return patches.PathPatch(Path(self.verts, self._codes))
 
     @current.setter
     def current(self, current):
@@ -255,6 +268,58 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             return gpsi, gBR, gBZ
 
 
+class ArbitraryPoints(CurrentFilamentSet):
+    """A set of arbitrary points in the R-Z plane with the same current
+
+    Parameters
+    ----------
+    rzpts : np.ndarray
+        An Nx2 array of (R,Z) locations for the filaments that comprise this
+        set.
+    **kwargs
+        Any valid keyword arguments for CurrentFilamentSet.
+
+    Attributes
+    ----------
+    """
+
+    _codes = None
+
+    def __init__(self, rz_pts, **kwargs):
+        self.rz_pts = np.asarray(rz_pts)
+        self._angle = 0.
+        super().__init__(**kwargs)
+
+    @property
+    def npts(self):
+        return len(self.rz_pts)
+
+    @property
+    def rz_pts(self):
+        return self._rz_pts
+
+    @property
+    def verts(self):
+        return None
+
+    @rz_pts.setter
+    def rz_pts(self, rz_pts):
+        self._rz_pts = np.asarray(rz_pts)
+        if len(rz_pts) != len(self.weights):
+            warn('Resetting weights to 1')
+            self._weights = np.ones(len(rz_pts))
+
+    def translate(self, vector):
+        self.rz_pts += np.array(vector)
+
+    def rotate(self, angle, pivot=(0., 0.)):
+        self._angle += angle
+        angle = math.pi*angle / 180
+        c, s = np.cos(angle), np.sin(angle)
+        rotation = np.array([[c, -s], [s, c]])
+        self.rz_pts = (self.rz_pts - pivot) @ rotation + np.asarray(pivot)
+
+
 class RectangularCoil(CurrentFilamentSet):
     """A rectangular cross section coil in the R-Z plane
 
@@ -281,6 +346,8 @@ class RectangularCoil(CurrentFilamentSet):
         by the relation nhat x phi_hat = rhat. Defaults to (0, 1) meaning the
         local z axis is aligned with the global z axis and likewise for the r
         axis.
+    **kwargs
+        Any valid keyword arguments for CurrentFilamentSet.
 
     Attributes
     ----------
@@ -307,12 +374,12 @@ class RectangularCoil(CurrentFilamentSet):
         Defaults to 0 meaning the local z axis is aligned with the global z
         axis.
     verts : np.ndarray
-        A 4x2 np.array representing the 4 vertices of the coil.
+        A 4x2 np.array representing the 4 vertices of the coil (read-only).
     area : float
-        The area of the coil in m^2.
+        The area of the coil in m^2 (read-only).
     current_density : float
         The current density in the coil. This is equal to the total current
-        divided by the area.
+        divided by the area (read-only).
     """
     _codes = [Path.MOVETO,
               Path.LINETO,
@@ -327,7 +394,6 @@ class RectangularCoil(CurrentFilamentSet):
         self.dr = dr
         self.dz = dz
         self.angle = angle
-        print(kwargs)
         super().__init__(**kwargs)
 
     @property
@@ -359,12 +425,20 @@ class RectangularCoil(CurrentFilamentSet):
         return self._dz
 
     @property
-    def npts(self):
-        return self.nr*self.nz
-
-    @property
     def angle(self):
         return self._angle
+
+    @property
+    def area(self):
+        return self.nr*self.dr*self.nz*self.dz
+
+    @property
+    def current_density(self):
+        return self.total_current / self.area
+
+    @property
+    def npts(self):
+        return self.nr*self.nz
 
     @property
     def rz_pts(self):
@@ -400,14 +474,6 @@ class RectangularCoil(CurrentFilamentSet):
 
         return verts + dverts
 
-    @property
-    def area(self):
-        return self.nr*self.dr*self.nz*self.dz
-
-    @property
-    def current_density(self):
-        return self.total_current / self.area
-
     @r0.setter
     def r0(self, r0):
         self._r0 = r0
@@ -441,10 +507,6 @@ class RectangularCoil(CurrentFilamentSet):
     def angle(self, angle):
         self._angle = angle
 
-    @property
-    def patch(self):
-        return patches.PathPatch(Path(self.verts, self._codes))
-
     def translate(self, vector):
         self.centroid += np.array(vector)
 
@@ -456,137 +518,162 @@ class RectangularCoil(CurrentFilamentSet):
         self.centroid = (self.centroid - pivot) @ rotation + np.asarray(pivot)
 
 
-#class MagnetRing(CurrentFilamentSet):
-#    """Represent a Rectangular cross-section dipole magnet with axisymmetric 
-#    surface currents.
-#
-#    Parameters
-#    ----------
-#    loc : tuple
-#        The (R, Z) location of the centroid of the magnet.
-#    width : float, optional
-#        The width of the magnet. Defaults to 0.01 m.
-#    height : float, optional
-#        The height of the magnet. Defaults to 0.01 m.
-#    mu_hat : float, optional
-#        The angle of the magnetic moment of the magnet in degrees from the z
-#        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole
-#        points in the +z direction).
-#
-#    Attributes
-#    ----------
-#    loc : tuple
-#        The (R, Z) location of the centroid of the magnet.
-#    width : float, optional
-#        The width of the magnet. Defaults to 0.01 m.
-#    height : float, optional
-#        The height of the magnet. Defaults to 0.01 m.
-#    mu_hat : float, optional
-#        The angle of the magnetic moment of the magnet in degrees from the z
-#        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole
-#        points in the +z direction).
-#    current_prof : integer or array_like
-#        The current profile along the side of the magnet. Defaults to
-#        np.ones(8) i.e. 8 equal surface currents per side.
-#    """
-#
-#    def __init__(self, loc, width=0.01, height=0.01, mu=1., mu_hat=0., **kwargs):
-#        self.loc = loc
-#        self.width = width
-#        self.height = height
-#        self.mu = mu
-#        self.mu_hat = mu_hat
-#        super().__init__(rz_pts, **kwargs)
-#
-#    def reset(self, **kwargs):
-#        # set Magnet specific attributes before calling super constructor
-#        r0, z0 = kwargs.pop("loc", (1.0, 1.0))
-#        if r0 < 0:
-#            raise ValueError("Centroid of magnet, r0, must be >= 0")
-#        r0 = float(r0)
-#        z0 = float(z0)
-#        width = float(kwargs.pop("width", .01))
-#        height = float(kwargs.pop("height", .01))
-#        if not (width > 0 and height > 0):
-#            raise ValueError("width and height must be greater than 0")
-#        self._width = width
-#        self._height = height
-#        ## need to pop this now but save it for later
-#        mu_hat = kwargs.pop("mu_hat", 0)
-#        self._mu_hat = 0
-#        current_prof = kwargs.pop("current_prof", 10)
-#        if isinstance(current_prof, Number):
-#            current_prof = ones(current_prof)
-#        else:
-#            current_prof = array(current_prof)
-#        if not current_prof.size > 0:
-#            raise ValueError("current_prof array must have size > 0")
-#        self._current_prof = current_prof
-#        self._loc = (r0, z0)
-#        # start building super class relevant inputs
-#        # super_kwargs include rz_pts,current,patchcls,patchargs_dict, any matplotlib.patches kwarg
-#        current = kwargs.pop("current", 1)
-#        if not current > 0:
-#            raise ValueError("current must be > 0")
-#        self._current = current
-#        n = len(self._current_prof)
-#        dummy = ones(n)
-#        rpts = self._width / 2.0 * hstack((-1 * dummy, dummy))
-#        if n == 1:
-#            zpts = zeros(2)
-#        else:
-#            ztmp = linspace(-self._height / 2.0, self._height / 2.0, n)
-#            zpts = hstack((ztmp, ztmp))
-#        rz_pts = vstack((rpts + r0, zpts + z0)).T
-#        patchkwargs = {"closed": True, "fc": "w", "ec": "k", "zorder": 3}
-#        # All leftover kwargs get put into patchkwargs
-#        patchkwargs.update(kwargs)
-#        # Build kwargs for super constructor
-#        super_kwargs = {"rz_pts": rz_pts, "current": 1.0, "patchcls": Polygon, "patchargs_dict": {}}
-#        super_kwargs.update(patchkwargs)
-#        # builds CurrentGroup at loc with current = 1 for all current objs
-#        super(Magnet, self).__init__(**super_kwargs)
-#        # make left side currents negative (current setter overridden below)
-#        self.current = self._current
-#        # rotate according to muhat direction
-#        self.mu_hat = mu_hat
-#
-#    @property
-#    def loc(self):
-#        return self._loc
-#
-#    @property
-#    def width(self):
-#        return self._width
-#
-#    @property
-#    def height(self):
-#        return self._height
-#
-#    @property
-#    def mu_hat(self):
-#        return self._mu_hat
-#
-#    @property
-#    def current_prof(self):
-#        return self._current_prof
-#
-#    @loc.setter
-#    def loc(self, r0, z0):
-#        self._loc = (r0, z0)
-#
-#    @width.setter
-#    def width(self, width):
-#        self._width = width
-#
-#    @height.setter
-#    def height(self, height):
-#        self._height = height
-#
-#    @mu_hat.setter
-#    def mu_hat(self, mu_hat):
-#        self.rotate(mu_hat - self._mu_hat)
-#
-#    @current_prof.setter
-#    def current_prof(self, new_prof):
-#        self.rebuild("current_prof", new_prof)
+class MagnetRing(CurrentFilamentSet):
+    """A rectangular cross-section axisymmetric dipole magnet ring.
+
+    A MagnetRing models a series of permanent dipole magnets placed
+    axisymmetrically in a ring. The dipole magnet is modeled with anti-parallel
+    surface currents on either side of the magnet.
+
+    Parameters
+    ----------
+    r0 : float
+        The R location of the centroid of the magnet ring
+    z0 : float
+        The Z location of the centroid of the magnet ring
+    width : float, optional
+        The width of the magnet. Defaults to 0.01 m.
+    height : float, optional
+        The height of the magnet. Defaults to 0.01 m.
+    mu_hat : float, optional
+        The angle of the magnetic moment of the magnet in degrees from the z
+        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole
+        points in the +z direction).
+    **kwargs
+        Any valid keyword arguments for CurrentFilamentSet.
+
+    Attributes
+    ----------
+    r0 : float
+        The R location of the centroid of the Coil
+    z0 : float
+        The Z location of the centroid of the Coil
+    centroid : np.array
+        Helper attribue for the R, Z location of the centroid of the Coil
+    width : float, optional
+        The width of the magnet. Defaults to 0.01 m.
+    height : float, optional
+        The height of the magnet. Defaults to 0.01 m.
+    mu_hat : float, optional
+        The angle of the magnetic moment of the magnet in degrees from the z
+        axis. Defaults to 0 degrees clockwise from Z axis (i.e. north pole
+        points in the +z direction).
+    """
+
+    _codes = [Path.MOVETO,
+              Path.LINETO,
+              Path.LINETO,
+              Path.LINETO,
+              Path.CLOSEPOLY]
+
+    def __init__(self, r0, z0, width=0.01, height=0.01, mu=1., mu_hat=0.,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.centroid = r0, z0
+        self.width = width
+        self.height = height
+        self.mu = mu
+        self.mu_hat = mu_hat
+
+    @property
+    def r0(self):
+        return self._r0
+
+    @property
+    def z0(self):
+        return self._z0
+
+    @property
+    def centroid(self):
+        return np.array([self.r0, self.z0])
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def mu_hat(self):
+        return self._mu_hat
+
+    @property
+    def npts(self):
+        return len(self._weights)
+
+    @property
+    def rz_pts(self):
+        # Compute the rz_pts locations from this coil's internal parameters
+        npts = self.npts
+        hnpts = npts//2
+        r0, z0 = self.centroid
+        hw, hh = self.width/2, self.height/2
+        rspace, zspace = hw*np.ones(hnpts), np.linspace(-hh, hh, hnpts)
+
+        rz_pts = np.empty((npts, 2))
+        rz_pts[0:hnpts, 0] = -rspace
+        rz_pts[hnpts:, 0] = -rspace
+        rz_pts[0:hnpts, 1] = zspace
+        rz_pts[hnpts:, 1] = zspace
+
+        if np.isclose(self.mu_hat, 0):
+            return rz_pts
+        return rotate(rz_pts, self.mu_hat, pivot=(r0, z0))
+
+    @property
+    def verts(self):
+        # Get indices for 4 corners of current filament array
+        npts = self.npts
+        idx = np.array([0, npts//2 - 1, npts - 1, npts//2, 0])
+        return self.rz_pts[idx, :]
+
+    @property
+    def patch(self):
+        return patches.PathPatch(Path(self.verts, self._codes))
+
+    @r0.setter
+    def r0(self, r0):
+        self._r0 = r0
+
+    @z0.setter
+    def z0(self, z0):
+        self._z0 = z0
+
+    @centroid.setter
+    def centroid(self, centroid):
+        self.r0 = centroid[0]
+        self.z0 = centroid[1]
+
+    @width.setter
+    def width(self, width):
+        self._width = width
+
+    @height.setter
+    def height(self, height):
+        self._height = height
+
+    @mu_hat.setter
+    def mu_hat(self, mu_hat):
+        self._mu_hat = mu_hat
+
+    @weights.setter
+    def weights(self, weights):
+        if weights is None:
+            weights = np.ones(20)
+            weights[10:] = -1.
+            self._weights = weights
+        else:
+            self._weights = np.asarray(weights)
+
+    def translate(self, vector):
+        self.centroid += np.array(vector)
+
+    def rotate(self, angle, pivot=(0., 0.)):
+        self.mu_hat += angle
+        angle = math.pi*angle / 180
+        c, s = np.cos(angle), np.sin(angle)
+        rotation = np.array([[c, -s], [s, c]])
+        self.centroid = (self.centroid - pivot) @ rotation + np.asarray(pivot)
+

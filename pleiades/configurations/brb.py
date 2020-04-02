@@ -1,17 +1,15 @@
-import numpy as np
 import os
 import warnings
-from matplotlib.patches import Polygon, Wedge
-from matplotlib.collections import PatchCollection
+import numpy as np
 import matplotlib as mpl
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 
-from pleiades import (Current, CurrentGroup, Magnet, Component, ZSymmCoilSet,
-                      MagnetGroup, CurrentArray, Configuration)
+from pleiades import ArbitraryPointsSet, RectangularCoil, Device
 
-class TREXcoil(CurrentGroup):
-    def __init__(self,**kwargs):
-        z0 = float(kwargs.pop("z0",0))
-        self._z0 = z0
+class TREXCoil(ArbitraryPointsSet):
+    def __init__(self, z0, **kwargs):
+        self.z0 = z0
         Rarr = 2.00467 + np.linspace(0, .067083, 6)
         Zarr = np.linspace(-.105469,.105469, 16)
         rz_pts = []
@@ -20,59 +18,46 @@ class TREXcoil(CurrentGroup):
                 rz_pts.extend([(r, z0 + z) for z in (Zarr[0::2]+Zarr[1::2])/2])
             else:
                 rz_pts.extend([(r, z0 + z) for z in Zarr])
-#        for i, z in enumerate(Zarr):
-#            if np.mod(i, 2) == 0:
-#                rz_pts.extend([(r, z0 + z) for r in Rarr])
-#            else:
-#                rz_pts.extend([(r, z0 + z) for r in Rarr[0:5]])
         rz_pts = np.array(rz_pts)
-        super_kwargs = {"rz_pts":rz_pts,"patchcls":Polygon,"fc":".35","ec":"k"}
-        super_kwargs.update(kwargs)
-        super(TREXcoil,self).__init__(**super_kwargs)
 
     @property
     def z0(self):
         return self._z0
 
+    @property
+    def npts(self):
+        pass
+
+    @property
+    def rz_pts(self):
+        pass
+
+    @property
+    def verts(self):
+        pass
+
+    @property
+    def area(self):
+        pass
+
+    @property
+    def total_current(self):
+        pass
+
+    @property
+    def current_density(self):
+        pass
+
     @z0.setter
-    def z0(self,new_z0):
-        dz = new_z0 - self._z0
-        super(TREXcoil,self).translate((0,dz))
-        self._z0 = new_z0
+    def z0(self, z0):
+        self._z0 = z0
 
-    def build_patchargs(self,**kwargs):
-        z0 = self._z0
-        left,right = 2.00467, 2.00467 + .067083
-        bottom, top = z0 - .105469, z0 + .105469
-        return (np.array([[left,bottom],[left,top],[right,top],[right,bottom]]),)
+    @rz_pts.setter
+    def (self, rz_pts):
+        msg = ('TREX coils cannot have their points changed except through the
+               z0 attribute')
+        raise NotImplementedError(msg)
 
-class TREXCoils(Component):
-    def __init__(self,**kwargs):
-        ###### Build TREX coils
-        super(TREXCoils,self).__init__()
-        z0 = float(kwargs.pop("z0",1.1757))
-        labels = kwargs.pop("labels",["Ncoil","Scoil"])
-        currents = np.array(kwargs.pop("currents",(1,1)),dtype="float")
-        nprocs = kwargs.pop("nprocs",[4,4])
-        patch_mask = kwargs.pop("patch_mask",[0,0])
-        grid = kwargs.pop("grid",None)
-        Scoil = TREXcoil(z0=-z0,**kwargs)
-        Ncoil = TREXcoil(z0=z0,**kwargs)
-        self.groups = [Ncoil,Scoil]
-        self.labels = labels
-        self.currents = currents
-        self.nprocs = nprocs
-        self.patch_mask = [0,0]
-
-class LTRXCoils(ZSymmCoilSet):
-    def __init__(self,**kwargs):
-        dr,dz = 0.010583333,0.01031667
-        nr,nz = 10,13
-        r0,z0 = 0.185725,1.6367
-        super_kwargs = {"r0":r0,"z0":z0,"dr":dr,"dz":dz,"labels":["Scoil","Ncoil"],
-                "patchcls":Polygon,"fc":".35","ec":"k"}
-        super_kwargs.update(kwargs)
-        super(LTRXCoils,self).__init__(**super_kwargs)
 
 class VesselMagnets(Component):
     def __init__(self,**kwargs):
@@ -151,14 +136,27 @@ class Dipole(Component):
         plist = [group.patches for group,mask in zip(self._groups,self._patch_mask) if not mask]
         return [p for sublist in plist for p in sublist]
 
-class BRB(Configuration):
-    def __init__(self,**kwargs):
-        super(BRB,self).__init__()
-        self.add_component(TREXCoils(),"trex")
-        self.add_component(LTRXCoils(),"ltrx")
-        self.add_component(VesselMagnets(),"vessel_mags")
-        self.grid = kwargs.pop("grid",None)
-        self.artists = [Wedge((0,0),1.556,0,360,width=.032,fc=".35",ec="k",zorder=100)]
+class BRB(Device):
+    def __init__(self):
+        # Global default patch settings
+        patch_kw = {'fc': '.35', 'ec': 'k'}
+
+        # Set TREX HH coil default parameters
+        z0 = 1.1
+        self.hh_n = TREXCoil(z0, **patch_kw)
+        self.hh_s = TREXCoil(-z0, **patch_kw)
+
+        # Set LTRX default parameters
+        r0, z0 = 0.185725, 1.6367
+        dr, dz = 0.010583333, 0.01031667
+        self.ltrx_n = RectangularCoil(r0, z0, nr=10, nz=13, dr=dr, dz=dz,
+                                      **patch_kw)
+        self.ltrx_n = RectangularCoil(r0, -z0, nr=10, nz=13, dr=dr, dz=dz,
+                                      **patch_kw)
+
+        # Set default magnet cage parameters
+
+
 
     def add_cathode(self):
         raise NotImplementedError("Can't add cathodes to BRB yet")
@@ -169,17 +167,3 @@ class BRB(Configuration):
     def add_sweep(self,center,r,theta1,theta2,width=None,**kwargs):
         self.patches.append(Wedge(center,r,theta1,theta2,width=width,**kwargs))
 
-class LTRX(Configuration):
-    def __init__(self,**kwargs):
-        super(LTRX,self).__init__()
-        zc = 2.811
-        self.add_component(CoilPack(r0=.286,z0=1.173-zc,nr=16,nz=16,dr=0.0135,dz=0.0135,fc=".35",ec="k"),"coil_1")
-        for i in range(2,8):
-            z_i = 1.173+.278 + (i-2)*.214 - zc
-            coil_i = CoilPack(r0=.381,z0=z_i,nr=12,nz=8,dr=0.0127,dz=0.0127,fc=".35",ec="k")
-            self.add_component(coil_i,"coil_{0}".format(i))
-        self.add_component(CoilPack(r0=.286,z0=2.811-zc,nr=16,nz=16,dr=0.0135,dz=0.0135,fc=".35",ec="k"),"coil_8")
-#        self.add_component(CoilPack(r0=.53,z0=3.3,nr=3,nz=6,dr=0.01,dz=0.01,fc=".35",ec="k"),"coil_9")
-#        self.add_component(CoilPack(r0=.53,z0=5.3,nr=3,nz=6,dr=0.01,dz=0.01,fc=".35",ec="k"),"coil_10")
-
-        self.grid = kwargs.pop("grid",None)

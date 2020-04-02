@@ -13,4 +13,5 @@ that comprise the pleiades package.
    :maxdepth: 1
 
    base
+   configurations
    analysis

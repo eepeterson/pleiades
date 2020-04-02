@@ -8,6 +8,21 @@ import matplotlib as mpl
 from pleiades import (Current, CurrentGroup, Magnet, Component, ZSymmCoilSet,
                       MagnetGroup, CurrentArray, Configuration)
 
+class LTRX(Configuration):
+    def __init__(self,**kwargs):
+        super(LTRX,self).__init__()
+        zc = 2.811
+        self.add_component(CoilPack(r0=.286,z0=1.173-zc,nr=16,nz=16,dr=0.0135,dz=0.0135,fc=".35",ec="k"),"coil_1")
+        for i in range(2,8):
+            z_i = 1.173+.278 + (i-2)*.214 - zc
+            coil_i = CoilPack(r0=.381,z0=z_i,nr=12,nz=8,dr=0.0127,dz=0.0127,fc=".35",ec="k")
+            self.add_component(coil_i,"coil_{0}".format(i))
+        self.add_component(CoilPack(r0=.286,z0=2.811-zc,nr=16,nz=16,dr=0.0135,dz=0.0135,fc=".35",ec="k"),"coil_8")
+#        self.add_component(CoilPack(r0=.53,z0=3.3,nr=3,nz=6,dr=0.01,dz=0.01,fc=".35",ec="k"),"coil_9")
+#        self.add_component(CoilPack(r0=.53,z0=5.3,nr=3,nz=6,dr=0.01,dz=0.01,fc=".35",ec="k"),"coil_10")
+
+        self.grid = kwargs.pop("grid",None)
+
 class PhilipsMRI(object):
     def __init__(self, loc, current):
         rho0, z0 = loc

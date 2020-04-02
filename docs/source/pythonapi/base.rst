@@ -2,24 +2,17 @@
 :mod:`pleiades` -- Basic Functionality
 --------------------------------------
 
-Building Current Objects and Groups
------------------------------------
+Building Magnetic Configurations
+--------------------------------
 
 .. autosummary::
    :toctree: generated
    :nosignatures:
-   :template: myclass.rst
+   :template: myclassinherit.rst
 
-   pleiades.Current
-   pleiades.CurrentGroup
-   pleiades.Magnet
-   pleiades.MagnetGroup
-   pleiades.CurrentArray
-   pleiades.Component
-   pleiades.Coil
-   pleiades.CoilPack
-   pleiades.ZSymmCoilSet
-   pleiades.Configuration
+   pleiades.CurrentFilamentSet
+   pleiades.RectangularCoil
+   pleiades.Device
 
 
 Building Grids
@@ -28,19 +21,16 @@ Building Grids
 .. autosummary::
    :toctree: generated
    :nosignatures:
-   :template: myclass.rst
+   :template: myclassinherit.rst
 
+   pleiades.Grid
    pleiades.RectGrid
-   pleiades.PointsListGrid
+   pleiades.PointsGrid
+   pleiades.RChord
+   pleiades.ZChord
+   pleiades.SphericalRChord
+   pleiades.ThetaChord
 
-Computing Green's Functions for Flux and Magnetic Field
--------------------------------------------------------
-.. autosummary::
-   :toctree: generated
-   :nosignatures:
-   :template: myfunction.rst
-
-   pleiades.compute_greens
 
 WIPPL Magnetic Configurations
 -----------------------------
@@ -48,11 +38,11 @@ WIPPL Magnetic Configurations
 .. autosummary::
    :toctree: generated
    :nosignatures:
-   :template: myclass.rst
+   :template: myclassinherit.rst
 
-   pleiades.BRB
-   pleiades.PCX_magCage
-   pleiades.PCX_HH
+   pleiades.configurations.BRB
+   pleiades.configurations.PCX_magCage
+   pleiades.configurations.PCX_HH
 
 Computing Equilibria
 --------------------
