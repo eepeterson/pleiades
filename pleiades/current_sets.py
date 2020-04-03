@@ -86,13 +86,13 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     def __setattr__(self, name, value):
         if name in self._SET_GREENS_TRIGS:
             self._flag_greens(getattr(self, name), value)
-        return super().__init__(name, value)
+        return super().__setattr__(name, value)
 
-    def __getattr__(self, name):
+    def __getattribute__(self, name):
         if name in self._GET_GREENS_TRIGS:
             if not self._uptodate:
                 self._compute_greens()
-        return super().__init__(name)
+        return super().__getattribute__(name)
 
     @abstractproperty
     def npts(self):
@@ -449,8 +449,8 @@ class RectangularCoil(CurrentFilamentSet):
         divided by the area (read-only).
     """
 
-    _SET_GREENS_TRIGS += ['r0', 'z0', 'centroid', 'nr',
-                          'nz', 'dr', 'dz' ,'angle']
+    _SET_GREENS_TRIGS = CurrentFilamentSet._SET_GREENS_TRIGS
+    _SET_GREENS_TRIGS = ['r0', 'z0', 'nr', 'nz', 'dr', 'dz' ,'angle']
 
     _codes = [Path.MOVETO,
               Path.LINETO,
@@ -551,51 +551,41 @@ class RectangularCoil(CurrentFilamentSet):
 
     @r0.setter
     def r0(self, r0):
-        self._flag_greens(self.r0, r0)
         self._r0 = r0
 
     @z0.setter
     def z0(self, z0):
-        self._flag_greens(self.z0, z0)
         self._z0 = z0
 
     @centroid.setter
     def centroid(self, centroid):
-        self._flag_greens(self.centroid, centroid)
         self.r0 = centroid[0]
         self.z0 = centroid[1]
 
     @nr.setter
     def nr(self, nr):
-        self._flag_greens(self.nr, nr)
         self._nr = nr
 
     @nz.setter
     def nz(self, nz):
-        self._flag_greens(self.nz, nz)
         self._nz = nz
 
     @dr.setter
     def dr(self, dr):
-        self._flag_greens(self.dr, dr)
         self._dr = dr
 
     @dz.setter
     def dz(self, dz):
-        self._flag_greens(self.dz, dz)
         self._dz = dz
 
     @angle.setter
     def angle(self, angle):
-        self._flag_greens(self.angle, angle)
         self._angle = angle
 
     def translate(self, vector):
-        self._flag_greens((0., 0.), vector)
         self.centroid += np.array(vector)
 
     def rotate(self, angle, pivot=(0., 0.)):
-        self._flag_greens(0., angle)
         self.angle += angle
         angle = math.pi*angle / 180
         c, s = np.cos(angle), np.sin(angle)
@@ -645,8 +635,8 @@ class MagnetRing(CurrentFilamentSet):
         points in the +z direction).
     """
 
-    _SET_GREENS_TRIGS += ['r0', 'z0', 'centroid', 'width',
-                          'height', 'mu_hat']
+    _SET_GREENS_TRIGS = CurrentFilamentSet._SET_GREENS_TRIGS
+    _SET_GREENS_TRIGS += ['r0', 'z0', 'width', 'height', 'mu_hat']
 
     _codes = [Path.MOVETO,
               Path.LINETO,
