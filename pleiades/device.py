@@ -30,28 +30,28 @@ class Device(metaclass=ABCMeta):
     """
 
     def __init__(self, **kwargs):
-        self._filament_sets = []
+        self._current_sets = []
 
     def __setattr__(self, name, value):
         if isinstance(value, CurrentFilamentSet):
-            if name not in self._filament_sets:
-                self._filament_sets.append(name)
+            if name not in self._current_sets:
+                self._current_sets.append(name)
             else:
                 raise ValueError
         super().__setattr__(name, value)
 
     def __delattr__(self, name):
-        if name in self._filament_sets:
-            self._filament_sets.remove(name)
+        if name in self._current_sets:
+            self._current_sets.remove(name)
         super().__delattr__(name)
 
     @property
-    def filament_sets(self):
-        return self._filament_sets
+    def current_sets(self):
+        return self._current_sets
 
     @property
     def currents(self):
-        return np.array([getattr(self, f).current for f in self.filament_sets])
+        return np.array([getattr(self, f).current for f in self.current_sets])
 
     def compute_greens(self, R, Z):
         """Helper function for computing Green's functions
@@ -64,11 +64,11 @@ class Device(metaclass=ABCMeta):
             A 1D np.array representing the Z positions of the grid
         """
         m = len(R.ravel())
-        n = len(self.filament_sets)
+        n = len(self.current_sets)
         gpsi = np.empty((m, n))
         gbr = np.empty((m, n))
         gbz = np.empty((m, n))
-        for i, fs in enumerate(self.filament_sets):
+        for i, fs in enumerate(self.current_sets):
             gtup = getattr(self, fs).compute_greens(R, Z, return_greens=True)
             gpsi[:, i] = gtup[0]
             gbr[:, i] = gtup[1]
@@ -104,7 +104,7 @@ class Device(metaclass=ABCMeta):
 
     @property
     def patches(self):
-        return [getattr(self, f).patch for f in self.filament_sets]
+        return [getattr(self, f).patch for f in self.current_sets]
 
     @property
     def patch_coll(self):
@@ -114,11 +114,11 @@ class Device(metaclass=ABCMeta):
     def grid(self, grid):
         self._grid = grid
         self.compute_greens(self.grid.R, self.grid.Z)
-#        for fs in [getattr(self, f) for f in self.filament_sets]:
+#        for fs in [getattr(self, f) for f in self.current_sets]:
 #            fs.compute_greens(self.R, self.Z)
 
     def plot_currents(self, ax):
-        for fs in [getattr(self, f) for f in self.filament_sets]:
+        for fs in [getattr(self, f) for f in self.current_sets]:
             fs.plot_currents(ax)
 
     def plot_psi(self, ax, **kwargs):

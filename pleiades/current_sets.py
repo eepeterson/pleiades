@@ -566,13 +566,11 @@ class MagnetRing(CurrentFilamentSet):
               Path.LINETO,
               Path.CLOSEPOLY]
 
-    def __init__(self, r0, z0, width=0.01, height=0.01, mu=1., mu_hat=0.,
-                 **kwargs):
+    def __init__(self, r0, z0, width=0.01, height=0.01, mu_hat=0., **kwargs):
         super().__init__(**kwargs)
         self.centroid = r0, z0
         self.width = width
         self.height = height
-        self.mu = mu
         self.mu_hat = mu_hat
 
     @property
@@ -658,11 +656,11 @@ class MagnetRing(CurrentFilamentSet):
     def mu_hat(self, mu_hat):
         self._mu_hat = mu_hat
 
-    @weights.setter
+    @CurrentFilamentSet.weights.setter
     def weights(self, weights):
         if weights is None:
-            weights = np.ones(20)
-            weights[10:] = -1.
+            weights = np.ones(16)
+            weights[8:] = -1.
             self._weights = weights
         else:
             self._weights = np.asarray(weights)
@@ -676,4 +674,3 @@ class MagnetRing(CurrentFilamentSet):
         c, s = np.cos(angle), np.sin(angle)
         rotation = np.array([[c, -s], [s, c]])
         self.centroid = (self.centroid - pivot) @ rotation + np.asarray(pivot)
-
