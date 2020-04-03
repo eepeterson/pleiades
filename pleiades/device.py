@@ -1,6 +1,7 @@
 from abc import ABCMeta
 import numpy as np
 from matplotlib.collections import PatchCollection
+from pleiades import CurrentFilamentSet
 
 
 class Device(metaclass=ABCMeta):
@@ -35,14 +36,14 @@ class Device(metaclass=ABCMeta):
     def __setattr__(self, name, value):
         if isinstance(value, CurrentFilamentSet):
             if name not in self._current_sets:
-                self._current_sets.append(name)
+                self._current_sets.append([name, value])
             else:
                 raise ValueError
         super().__setattr__(name, value)
 
     def __delattr__(self, name):
         if name in self._current_sets:
-            self._current_sets.remove(name)
+            self._current_sets.remove([name, getattr(self, name)])
         super().__delattr__(name)
 
     @property
@@ -51,32 +52,23 @@ class Device(metaclass=ABCMeta):
 
     @property
     def currents(self):
-        return np.array([getattr(self, f).current for f in self.current_sets])
+        return np.array([obj.current for name, obj in self.current_sets])
 
-    def compute_greens(self, R, Z):
-        """Helper function for computing Green's functions
-
-        Parameters
-        ----------
-        R : np.array
-            A 1D np.array representing the R positions of the grid
-        Z : np.array
-            A 1D np.array representing the Z positions of the grid
-        """
-        m = len(R.ravel())
+    def _compute_greens(self):
+        """Compute Green's function matrices for all CurrentFilamentSets"""
+        m = self.grid.size
         n = len(self.current_sets)
         gpsi = np.empty((m, n))
         gbr = np.empty((m, n))
         gbz = np.empty((m, n))
-        for i, fs in enumerate(self.current_sets):
-            gtup = getattr(self, fs).compute_greens(R, Z, return_greens=True)
-            gpsi[:, i] = gtup[0]
-            gbr[:, i] = gtup[1]
-            gbz[:, i] = gtup[2]
+        for i, cs in enumerate([obj for name, obj in self.current_sets]):
+            gpsi[i, :] = cs.gpsi.ravel()
+            gbr[i, :] = cs.gBR.ravel()
+            gbz[i, :] = cs.gBZ.ravel()
 
-        self.g_psi = gpsi
-        self.g_br = gbr
-        self.g_bz = gbz
+        self._gpsi = gpsi
+        self._gBR = gbr
+        self._gBZ = gbz
 
     @property
     def grid(self):
@@ -92,34 +84,55 @@ class Device(metaclass=ABCMeta):
 
     @property
     def psi(self):
-        return self.g_psi @ self.currents
+        return self.currents @ self.gpsi
 
     @property
     def BR(self):
-        return self.g_br @ self.currents
+        return self.currents @ self.gBR
 
     @property
     def BZ(self):
-        return self.g_bz @ self.currents
+        return self.currents @ self.gBZ
+
+    @property
+    def gpsi(self):
+        if not self._uptodate:
+            self._compute_greens()
+        return self._gpsi
+
+    @property
+    def gBR(self):
+        if not self._uptodate:
+            self._compute_greens()
+        return self._gBR
+
+    @property
+    def gBZ(self):
+        if not self._uptodate:
+            self._compute_greens()
+        return self._gBZ
 
     @property
     def patches(self):
-        return [getattr(self, f).patch for f in self.current_sets]
+        return [obj.patch for name, obj in self.current_sets]
 
     @property
     def patch_coll(self):
         return PatchCollection(self.patches, match_original=True)
 
+    @property
+    def _uptodate(self):
+        return all([obj._uptodate for name, obj in self.current_sets])
+
     @grid.setter
     def grid(self, grid):
         self._grid = grid
-        self.compute_greens(self.grid.R, self.grid.Z)
-#        for fs in [getattr(self, f) for f in self.current_sets]:
-#            fs.compute_greens(self.R, self.Z)
+        for cset in [obj for name, obj in self.current_sets]:
+            cset.grid = grid
 
     def plot_currents(self, ax):
-        for fs in [getattr(self, f) for f in self.current_sets]:
-            fs.plot_currents(ax)
+        for cset in [obj for name, obj in self.current_sets]:
+            cset.plot_currents(ax)
 
     def plot_psi(self, ax, **kwargs):
         R, Z = self.grid.R, self.grid.Z

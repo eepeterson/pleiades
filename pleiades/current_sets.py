@@ -7,10 +7,7 @@ from scipy.special import ellipk, ellipe
 from matplotlib.path import Path
 import matplotlib.patches as patches
 
-from pleiades.fields_math import compute_greens
-
-_OUT_OF_DATE_GREENS = """Warning: The greens function for this instance is now
-out of date"""
+from pleiades import Grid, compute_greens
 
 
 def rotate(pts, angle, pivot=(0., 0.)):
@@ -69,58 +66,101 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     total_current : float
         The total current being carried in the filament set. This is equal to
         the current times the sum of the weights.
-    g_psi : np.ndarray
-        The Green's function for magnetic flux on a specified mesh. This
-        np.ndarray has the same shape as the mesh it was created with. The units
-        of the Green's function are Wb/A so multiplying by the current in the
-        CurrentFilamentSet gives the total flux, psi.
-    g_BR : np.ndarray
-        The Green's function for B_R component of the magnetic field on a
-        specified mesh. This np.ndarray has the same shape as the mesh it was
-        created with. The units of the Green's function are T/A so multiplying
-        by the current in the CurrentFilamentSet gives B_R.
-    g_BZ : np.ndarray
-        The Green's function for magnetic flux on a specified mesh. This
-        np.ndarray has the same shape as the mesh it was created with. The units
-        of the Green's function are T/A so multiplying by the current in the
-        CurrentFilamentSet gives B_R.
     """
 
     _EPS = 1E-12
-    _GREENS_TRIGS = ['weights']
+    _SET_GREENS_TRIGS = ['weights', 'grid']
+    _GET_GREENS_TRIGS = ['gpsi', 'gBR', 'gBZ']
 
-    def __init__(self, current=1., weights=None, **kwargs):
-        self.current = current
-        self.weights = weights
-        self.patch_kw = kwargs
-        self._uptodate = False
+    def __init__(self, current=1., weights=None, grid=None, **kwargs):
+        self._current = None
+        self._weights = None
+        self._grid = None
         self._grid_pts = None
 
+        self.current = current
+        self.weights = weights
+        self.grid = grid
+        self.patch_kw = kwargs
+
     def __setattr__(self, name, value):
-        if name in self._GREENS_TRIGS:
+        if name in self._SET_GREENS_TRIGS:
             self._flag_greens(getattr(self, name), value)
         return super().__init__(name, value)
 
-    def _flag_greens(self, current, future):
-        """Determines if Green's functions need to be recomputed.
+    def __getattr__(self, name):
+        if name in self._GET_GREENS_TRIGS:
+            if not self._uptodate:
+                self._compute_greens()
+        return super().__init__(name)
 
-        Checks value of current against the value of future and decides whether
-        or not to set self._uptodate to True or False. This function is intended
-        to make the user experience smoother while preserving performance by
-        caching the Green's functions. Variables that require recomputing
-        Green's functions include any positional variables or weights.
+    @abstractproperty
+    def npts(self):
+        pass
 
-        Parameters
-        ----------
-        current :
-            The current value
-        future :
-            The future value being set
-        """
-        uptodate = np.all(np.isclose(current, future, rtol=0., atol=self._EPS))
-        self._uptodate = uptodate
+    @abstractproperty
+    def rz_pts(self):
+        pass
 
-    def _prep_greens_grid(self, grid):
+    @abstractproperty
+    def patch(self):
+        pass
+
+    @property
+    def current(self):
+        return self._current
+
+    @property
+    def weights(self):
+        return self._weights
+
+    @property
+    def rzw(self):
+        rzw = np.empty((self.npts, 3))
+        rzw[:, 0:2] = self.rz_pts
+        rzw[:, 2] = self.weights
+        return rzw
+
+    @property
+    def grid(self):
+        return self._grid
+
+    @property
+    def gpsi(self):
+        return self._gpsi
+
+    @property
+    def gBR(self):
+        return self._gBR
+
+    @property
+    def gBZ(self):
+        return self._gBZ
+
+    @property
+    def total_current(self):
+        return self.current*np.sum(self.weights)
+
+    @property
+    def _markers(self):
+        cw = self.current*self.weights
+        cw[np.abs(cw) < self._EPS] = 0
+        return ['' if cwi == 0 else 'x' if cwi > 0 else 'o' for cwi in cw]
+
+    @current.setter
+    def current(self, current):
+        self._current = current
+
+    @weights.setter
+    def weights(self, weights):
+        if weights is None:
+            self._weights = np.ones(self.npts)
+        else:
+            assert len(weights) == self.npts
+            self._weights = np.asarray(weights)
+
+    @grid.setter
+    def grid(self, grid):
         """Parses input grid variable into Nx2 array of points.
 
         Checks value of current against the value of future and decides whether
@@ -134,16 +174,9 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         grid : 2-tuple of np.array, or Nx2 np.array, or pleiades.Grid object
             An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
             pleiades.Grid object to evaluate the Green's function on.
-
-        Returns
-        -------
-        rz_pts, shape
-            rz_pts is an Nx2 numpy array with the requested grid points and
-            shape is the shape of the input grid so that the output can be set
-            to the same shape as the input
         """
         # Prep rz_pts array and get shape based on input 
-        if isinstance(grid, pleiades.Grid):
+        if isinstance(grid, Grid):
             shape = grid.R.shape
             rz_pts = np.empty((grid.R.size, 2))
             rz_pts[:, 0] = grid.R.ravel()
@@ -159,64 +192,24 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             rz_pts = np.empty_like(grid[0])
             rz_pts[:, 0] = grid[0].ravel()
             rz_pts[:, 1] = grid[1].ravel()
-
-        # If the grid points are the same shape as before we need to check if
-        # all their entries are equal if not the Green's functions need updating
-        if rz_pts.shape == self._grid_pts.shape:
-            self._flag_greens(rz_pts, self._grid_pts)
         else:
+            raise ValueError('Unsupported type for grid')
+
+        # If the grid is currently set to None, flag as out of date, otherwise
+        # perform some checks
+        if self._grid is None:
             self._uptodate = False
-
-        return rz_pts, shape
-
-    @property
-    def current(self):
-        return self._current
-
-    @property
-    def weights(self):
-        return self._weights
-
-    @abstractproperty
-    def npts(self):
-        pass
-
-    @abstractproperty
-    def rz_pts(self):
-        pass
-
-    @property
-    def rzw(self):
-        rzw = np.empty((self.npts, 3))
-        rzw[:, 0:2] = self.rz_pts
-        rzw[:, 2] = self.weights
-        return rzw
-
-    @property
-    def total_current(self):
-        return self.current*np.sum(self.weights)
-
-    @abstractproperty
-    def patch(self):
-        pass
-
-    @property
-    def _markers(self):
-        cw = self.current*self.weights
-        cw[np.abs(cw) < 1E-12] = 0
-        return ['' if cwi == 0 else 'x' if cwi > 0 else 'o' for cwi in cw]
-
-    @current.setter
-    def current(self, current):
-        self._current = current
-
-    @weights.setter
-    def weights(self, weights):
-        if weights is None:
-            self._weights = np.ones(self.npts)
         else:
-            assert len(weights) == self.npts
-            self._weights = np.asarray(weights)
+            # If the grid points are the same shape as before we need to check
+            # if all their entries are equal if not the Green's functions need
+            # updating
+            if len(rz_pts) == len(self._grid_pts):
+                self._flag_greens(rz_pts, self._grid_pts)
+            else:
+                self._uptodate = False
+
+        self._grid = grid
+        self._grid_pts = rz_pts
 
     @abstractmethod
     def translate(self, vector):
@@ -240,99 +233,105 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             The (R, Z) location of the pivot. Defaults to (0., 0.).
         """
 
-    def plot(self, ax, **kwargs):
+    def psi(self, current=None):
+        """Compute the magnetic flux, psi.
+
+        Parameters
+        ----------
+        current : float, optional
+            Specify a current value to override the current attribute for
+            calculating the field. Defaults to None, which causes the current
+            attribute to be used for the calculation
+
+        Returns
+        -------
+        psi : np.array
+        """
+        current = self.current if current is None else current
+        return current*self.gpsi
+
+    def BR(self, current=None):
+        """Compute the radial component of the magnetic field, BR.
+
+        Parameters
+        ----------
+        current : float, optional
+            Specify a current value to override the current attribute for
+            calculating the field. Defaults to None, which causes the current
+            attribute to be used for the calculation
+
+        Returns
+        -------
+        BR : np.array
+        """
+        current = self.current if current is None else current
+        return current*self.gBR
+
+    def BZ(self, current=None):
+        """Compute the z component of the magnetic field, BZ.
+
+        Parameters
+        ----------
+        current : float, optional
+            Specify a current value to override the current attribute for
+            calculating the field. Defaults to None, which causes the current
+            attribute to be used for the calculation
+
+        Returns
+        -------
+        BZ : np.array
+        """
+        current = self.current if current is None else current
+        return current*self.gBZ
+
+    def plot(self, ax, plot_patch=True, **kwargs):
         """Plot the current locations for the CurrentGroup
 
         Parameters
         ----------
         ax : matplotlib.Axes object
             The axes object for plotting the current locations
+        plot_patch : bool
+            Whether to add the patch for this CurrentFilament to the axes.
         **kwargs : dict, optional
             Keyword arguments to pass to Current.plot method
         """
-        ax.add_patch(self.patch)
+        if plot_patch:
+            ax.add_patch(self.patch)
+
         markers = self._markers
         for i, (r, z, w) in enumerate(self.rzw):
-            ax.plot(r, z, marker=markers[i] **kwargs)
+            ax.plot(r, z, marker=markers[i], **kwargs)
 
-    def psi(self, rz_pts=None, current=None):
-        """Compute the magnetic flux, psi, on the desired grid.
+    def _compute_greens(self):
+        """Compute and assign the Green's functions for psi, BR, and BZ"""
+        # Calculate Green's functions 
+        gpsi, gBR, gBZ = compute_greens(self.rzw, self._grid_pts)
+        self._gpsi = gpsi
+        self._gBR = gBR
+        self._gBZ = gBZ
 
-        Parameters
-        ----------
-        grid : np.array
-            (R, Z) points at which to calculate the magnetic flux
+        # Notify instance that the Green's functions are up to date
+        self._uptodate = True
 
-        Returns
-        -------
-        psi : np.array
-        """
-        if not self._uptodate:
-            self.compute_greens(grid)
-        return self.current*self.g_psi
+    def _flag_greens(self, current, future):
+        """Determines if Green's functions need to be recomputed.
 
-    def br(self, grid=None):
-        """Compute the radial component of the magnetic field, B_R, on the
-        desired grid.
-
-        Parameters
-        ----------
-        grid : np.array
-            (R, Z) points at which to calculate the magnetic field Br
-
-        Returns
-        -------
-        br : np.array
-        """
-        return self.current*self.g_BR
-
-    def bz(self, grid=None):
-        """Compute the radial component of the magnetic field, B_Z, on the
-        desired grid.
+        Checks value of current against the value of future and decides whether
+        or not to set self._uptodate to True or False. This function is intended
+        to make the user experience smoother while preserving performance by
+        caching the Green's functions. Variables that require recomputing
+        Green's functions include any positional variables or weights.
 
         Parameters
         ----------
-        grid : np.array
-            (R, Z) points at which to calculate the magnetic field Bz
-
-        Returns
-        -------
-        bz : np.array
+        current :
+            The current value
+        future :
+            The future value being set
         """
-        return self.current*self.g_BZ
-
-    def compute_greens(self, grid, return_greens=False):
-        """Helper function for computing Green's functions
-
-        Parameters
-        ----------
-        grid : tuple, or np.array, or pleiades.Grid object
-            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
-            pleiades.Grid object to evaluate the Green's function on.
-        return_greens : bool
-            Whether or not to return the Green's functions.
-
-        Returns
-        -------
-        None or 3-tuple of Green's functions
-        """
-        rz_pts, shape = self._prep_greens_grid(grid)
-
-        if not self._uptodate:
-            # Calculate Green's functions 
-            gpsi, gBR, gBZ = compute_greens(self.rzw, rz_pts)
-
-            # Reshape the Green's functions to the same shape as in the input
-            self.g_psi = gpsi.reshape(shape)
-            self.g_BR = gBR.reshape(shape)
-            self.g_BZ = gBZ.reshape(shape)
-
-            # Notify instance that the Green's functions are up to date
-            self._uptodate = True
-
-        # Return the Green's functions if that is requested
-        if return_greens:
-            return self.g_psi, self.g_BR, self.g_BZ
+        uptodate = np.all(np.isclose(current, future, rtol=0., atol=self._EPS))
+        self._uptodate = uptodate
 
 
 class ArbitraryPoints(CurrentFilamentSet):
@@ -450,7 +449,8 @@ class RectangularCoil(CurrentFilamentSet):
         divided by the area (read-only).
     """
 
-    _GREENS_TRIGS += ['r0', 'z0', 'centroid', 'nr', 'nz', 'dr', 'dz' ,'angle']
+    _SET_GREENS_TRIGS += ['r0', 'z0', 'centroid', 'nr',
+                          'nz', 'dr', 'dz' ,'angle']
 
     _codes = [Path.MOVETO,
               Path.LINETO,
@@ -587,7 +587,7 @@ class RectangularCoil(CurrentFilamentSet):
 
     @angle.setter
     def angle(self, angle):
-        self._flag_greens(self.dz, dz)
+        self._flag_greens(self.angle, angle)
         self._angle = angle
 
     def translate(self, vector):
@@ -645,6 +645,9 @@ class MagnetRing(CurrentFilamentSet):
         points in the +z direction).
     """
 
+    _SET_GREENS_TRIGS += ['r0', 'z0', 'centroid', 'width',
+                          'height', 'mu_hat']
+
     _codes = [Path.MOVETO,
               Path.LINETO,
               Path.LINETO,
@@ -659,7 +662,7 @@ class MagnetRing(CurrentFilamentSet):
         if kwargs.get('weights', None) is None:
             weights = np.ones(16)
             weights[8:] = -1.
-            kwargs.update['weights'] = weights
+            kwargs['weights'] = weights
         super().__init__(**kwargs)
 
     @property
