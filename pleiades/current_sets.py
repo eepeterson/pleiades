@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import Iterable
 from warnings import warn, simplefilter
 import math
 import numpy as np
@@ -6,6 +7,7 @@ from scipy.special import ellipk, ellipe
 from matplotlib.path import Path
 import matplotlib.patches as patches
 
+from pleiades.fields_math import compute_greens
 
 _OUT_OF_DATE_GREENS = """Warning: The greens function for this instance is now
 out of date"""
@@ -42,7 +44,9 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         current profile shaping in the case of permanent magnets. Defaults to
         1 for every location.
     **kwargs
-        Any matplotlib.patches.PathPatch keyword arguments
+        Any matplotlib.patches.Patch keyword arguments. No type checking is
+        performed on these inputs they are simply assigned to the patch_kw
+        attribute.
 
     Attributes
     ----------
@@ -53,11 +57,11 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         positive and negative currents in an object at the same time as well as
         current profile shaping in the case of permanent magnets. Defaults to
         1 for every location
-    rz_pts : iterable
-        Nx2 iterable representing R, Z current centroids.
     npts : int
         Integer for the number of current filaments in this object.
-    rzw : np.array
+    rz_pts : np.ndarray
+        Nx2 array representing R, Z current centroids.
+    rzw : np.ndarray
         An Nx3 array whos rows are rzw[i, :] = rloc, zloc, weight which
         describe the current location and current weight for each filament in
         the CurrentFilamentSet. This is simply a helper attribute for combining
@@ -65,21 +69,105 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     total_current : float
         The total current being carried in the filament set. This is equal to
         the current times the sum of the weights.
-    g_psi : GreensFunction object
-        An object representing the Green's function for magnetic flux for this
-        CurrentFilamentSet.
-    g_br : GreensFunction object
-        An object representing the Green's function for the radial component B_R
-        for this CurrentFilamentSet.
-    g_bz : GreensFunction object
-        An object representing the Green's function for the radial component B_R
-        for this CurrentFilamentSet.
+    g_psi : np.ndarray
+        The Green's function for magnetic flux on a specified mesh. This
+        np.ndarray has the same shape as the mesh it was created with. The units
+        of the Green's function are Wb/A so multiplying by the current in the
+        CurrentFilamentSet gives the total flux, psi.
+    g_BR : np.ndarray
+        The Green's function for B_R component of the magnetic field on a
+        specified mesh. This np.ndarray has the same shape as the mesh it was
+        created with. The units of the Green's function are T/A so multiplying
+        by the current in the CurrentFilamentSet gives B_R.
+    g_BZ : np.ndarray
+        The Green's function for magnetic flux on a specified mesh. This
+        np.ndarray has the same shape as the mesh it was created with. The units
+        of the Green's function are T/A so multiplying by the current in the
+        CurrentFilamentSet gives B_R.
     """
+
+    _EPS = 1E-12
+    _GREENS_TRIGS = ['weights']
 
     def __init__(self, current=1., weights=None, **kwargs):
         self.current = current
         self.weights = weights
         self.patch_kw = kwargs
+        self._uptodate = False
+        self._grid_pts = None
+
+    def __setattr__(self, name, value):
+        if name in self._GREENS_TRIGS:
+            self._flag_greens(getattr(self, name), value)
+        return super().__init__(name, value)
+
+    def _flag_greens(self, current, future):
+        """Determines if Green's functions need to be recomputed.
+
+        Checks value of current against the value of future and decides whether
+        or not to set self._uptodate to True or False. This function is intended
+        to make the user experience smoother while preserving performance by
+        caching the Green's functions. Variables that require recomputing
+        Green's functions include any positional variables or weights.
+
+        Parameters
+        ----------
+        current :
+            The current value
+        future :
+            The future value being set
+        """
+        uptodate = np.all(np.isclose(current, future, rtol=0., atol=self._EPS))
+        self._uptodate = uptodate
+
+    def _prep_greens_grid(self, grid):
+        """Parses input grid variable into Nx2 array of points.
+
+        Checks value of current against the value of future and decides whether
+        or not to set self._uptodate to True or False. This function is intended
+        to make the user experience smoother while preserving performance by
+        caching the Green's functions. Variables that require recomputing
+        Green's functions include any positional variables or weights.
+
+        Parameters
+        ----------
+        grid : 2-tuple of np.array, or Nx2 np.array, or pleiades.Grid object
+            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
+            pleiades.Grid object to evaluate the Green's function on.
+
+        Returns
+        -------
+        rz_pts, shape
+            rz_pts is an Nx2 numpy array with the requested grid points and
+            shape is the shape of the input grid so that the output can be set
+            to the same shape as the input
+        """
+        # Prep rz_pts array and get shape based on input 
+        if isinstance(grid, pleiades.Grid):
+            shape = grid.R.shape
+            rz_pts = np.empty((grid.R.size, 2))
+            rz_pts[:, 0] = grid.R.ravel()
+            rz_pts[:, 1] = grid.Z.ravel()
+        elif isinstance(grid, np.ndarray):
+            assert len(grid.shape) == 2
+            assert grid.shape[1] == 2
+            shape = grid.shape[0:1]
+            rz_pts = grid
+        elif isinstance(grid, Iterable):
+            assert len(grid) == 2
+            shape = grid[0].shape
+            rz_pts = np.empty_like(grid[0])
+            rz_pts[:, 0] = grid[0].ravel()
+            rz_pts[:, 1] = grid[1].ravel()
+
+        # If the grid points are the same shape as before we need to check if
+        # all their entries are equal if not the Green's functions need updating
+        if rz_pts.shape == self._grid_pts.shape:
+            self._flag_greens(rz_pts, self._grid_pts)
+        else:
+            self._uptodate = False
+
+        return rz_pts, shape
 
     @property
     def current(self):
@@ -90,19 +178,11 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         return self._weights
 
     @abstractproperty
-    def rz_pts(self):
-        pass
-
-    @abstractproperty
     def npts(self):
         pass
 
     @abstractproperty
-    def verts(self):
-        pass
-
-    @abstractproperty
-    def _codes(self):
+    def rz_pts(self):
         pass
 
     @property
@@ -116,15 +196,15 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     def total_current(self):
         return self.current*np.sum(self.weights)
 
+    @abstractproperty
+    def patch(self):
+        pass
+
     @property
-    def markers(self):
+    def _markers(self):
         cw = self.current*self.weights
         cw[np.abs(cw) < 1E-12] = 0
         return ['' if cwi == 0 else 'x' if cwi > 0 else 'o' for cwi in cw]
-
-    @property
-    def patch(self):
-        return patches.PathPatch(Path(self.verts, self._codes))
 
     @current.setter
     def current(self, current):
@@ -132,7 +212,6 @@ class CurrentFilamentSet(metaclass=ABCMeta):
 
     @weights.setter
     def weights(self, weights):
-        print(self.npts)
         if weights is None:
             self._weights = np.ones(self.npts)
         else:
@@ -172,11 +251,11 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             Keyword arguments to pass to Current.plot method
         """
         ax.add_patch(self.patch)
-        markers = self.markers
+        markers = self._markers
         for i, (r, z, w) in enumerate(self.rzw):
             ax.plot(r, z, marker=markers[i] **kwargs)
 
-    def psi(self, grid=None):
+    def psi(self, rz_pts=None, current=None):
         """Compute the magnetic flux, psi, on the desired grid.
 
         Parameters
@@ -188,6 +267,8 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         -------
         psi : np.array
         """
+        if not self._uptodate:
+            self.compute_greens(grid)
         return self.current*self.g_psi
 
     def br(self, grid=None):
@@ -220,52 +301,38 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         """
         return self.current*self.g_BZ
 
-    def compute_greens(self, R, Z, return_greens=False):
+    def compute_greens(self, grid, return_greens=False):
         """Helper function for computing Green's functions
 
         Parameters
         ----------
-        R : np.array
-            A 1D np.array representing the R positions of the grid
-        Z : np.array
-            A 1D np.array representing the Z positions of the grid
-        """
-        simplefilter("ignore", RuntimeWarning)
-        R, Z = R.flatten(), Z.flatten()
-        n = len(R)
-        gpsi = np.zeros(n)
-        gBR = np.zeros(n)
-        gBZ = np.zeros(n)
-        R2 = R**2
-        mu_0 = 4*math.pi*1E-7
-        pre_factor = mu_0 / (4*math.pi)
-        for r0, z0, weight in self.rzw:
-            if np.isclose(r0, 0, rtol=0, atol=1E-12):
-                continue
-            fac0 = (Z - z0)**2
-            d = np.sqrt(fac0 + (R + r0)**2)
-            d_ = np.sqrt(fac0 + (R - r0)**2)
-            k_2 = 4*R*r0 / d**2
-            K = ellipk(k_2)
-            E = ellipe(k_2)
-            denom = d*d_ **2
-            fac1 = K*d_ **2
-            fac2 = (fac0 + R2 + r0**2)*E
-            gpsi_tmp = weight*pre_factor*R*r0*4 / d / k_2*((2 - k_2)*K - 2*E)
-            gpsi_tmp[~np.isfinite(gpsi_tmp)] = 0
-            gpsi += gpsi_tmp
-            gBR_tmp = -2*weight*pre_factor*(Z - z0)*(fac1 - fac2) / (R*denom)
-            gBR_tmp[~np.isfinite(gBR_tmp)] = 0
-            gBR += gBR_tmp
-            gBZ_tmp = 2*weight*pre_factor*(fac1 - (fac2 - 2*r0**2*E)) / denom
-            gBZ_tmp[~np.isfinite(gBZ_tmp)] = 0
-            gBZ += gBZ_tmp
+        grid : tuple, or np.array, or pleiades.Grid object
+            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
+            pleiades.Grid object to evaluate the Green's function on.
+        return_greens : bool
+            Whether or not to return the Green's functions.
 
-        self.g_psi = gpsi
-        self.g_BR = gBR
-        self.g_BZ = gBZ
+        Returns
+        -------
+        None or 3-tuple of Green's functions
+        """
+        rz_pts, shape = self._prep_greens_grid(grid)
+
+        if not self._uptodate:
+            # Calculate Green's functions 
+            gpsi, gBR, gBZ = compute_greens(self.rzw, rz_pts)
+
+            # Reshape the Green's functions to the same shape as in the input
+            self.g_psi = gpsi.reshape(shape)
+            self.g_BR = gBR.reshape(shape)
+            self.g_BZ = gBZ.reshape(shape)
+
+            # Notify instance that the Green's functions are up to date
+            self._uptodate = True
+
+        # Return the Green's functions if that is requested
         if return_greens:
-            return gpsi, gBR, gBZ
+            return self.g_psi, self.g_BR, self.g_BZ
 
 
 class ArbitraryPoints(CurrentFilamentSet):
@@ -283,8 +350,6 @@ class ArbitraryPoints(CurrentFilamentSet):
     ----------
     """
 
-    _codes = None
-
     def __init__(self, rz_pts, **kwargs):
         self.rz_pts = np.asarray(rz_pts)
         self._angle = 0.
@@ -299,20 +364,23 @@ class ArbitraryPoints(CurrentFilamentSet):
         return self._rz_pts
 
     @property
-    def verts(self):
+    def patch(self):
         return None
 
     @rz_pts.setter
     def rz_pts(self, rz_pts):
+        self._flag_greens(rz_pts, self.rz_pts)
         self._rz_pts = np.asarray(rz_pts)
         if len(rz_pts) != len(self.weights):
             warn('Resetting weights to 1')
             self._weights = np.ones(len(rz_pts))
 
     def translate(self, vector):
+        self._flag_greens((0., 0.), vector)
         self.rz_pts += np.array(vector)
 
     def rotate(self, angle, pivot=(0., 0.)):
+        self._flag_greens(0., angle)
         self._angle += angle
         angle = math.pi*angle / 180
         c, s = np.cos(angle), np.sin(angle)
@@ -381,6 +449,9 @@ class RectangularCoil(CurrentFilamentSet):
         The current density in the coil. This is equal to the total current
         divided by the area (read-only).
     """
+
+    _GREENS_TRIGS += ['r0', 'z0', 'centroid', 'nr', 'nz', 'dr', 'dz' ,'angle']
+
     _codes = [Path.MOVETO,
               Path.LINETO,
               Path.LINETO,
@@ -429,14 +500,6 @@ class RectangularCoil(CurrentFilamentSet):
         return self._angle
 
     @property
-    def area(self):
-        return self.nr*self.dr*self.nz*self.dz
-
-    @property
-    def current_density(self):
-        return self.total_current / self.area
-
-    @property
     def npts(self):
         return self.nr*self.nz
 
@@ -455,7 +518,11 @@ class RectangularCoil(CurrentFilamentSet):
         return rotate(rz_pts, self.angle, pivot=(r0, z0))
 
     @property
-    def verts(self):
+    def patch(self):
+        return patches.PathPatch(Path(self._verts, self._codes))
+
+    @property
+    def _verts(self):
         # Get indices for 4 corners of current filament array
         nr, dr, nz, dz = self.nr, self.dr, self.nz, self.dz
         idx = np.array([0, nz - 1, nr*nz - 1, (nr - 1)*nz, 0])
@@ -474,43 +541,61 @@ class RectangularCoil(CurrentFilamentSet):
 
         return verts + dverts
 
+    @property
+    def area(self):
+        return self.nr*self.dr*self.nz*self.dz
+
+    @property
+    def current_density(self):
+        return self.total_current / self.area
+
     @r0.setter
     def r0(self, r0):
+        self._flag_greens(self.r0, r0)
         self._r0 = r0
 
     @z0.setter
     def z0(self, z0):
+        self._flag_greens(self.z0, z0)
         self._z0 = z0
 
     @centroid.setter
     def centroid(self, centroid):
+        self._flag_greens(self.centroid, centroid)
         self.r0 = centroid[0]
         self.z0 = centroid[1]
 
     @nr.setter
     def nr(self, nr):
+        self._flag_greens(self.nr, nr)
         self._nr = nr
 
     @nz.setter
     def nz(self, nz):
+        self._flag_greens(self.nz, nz)
         self._nz = nz
 
     @dr.setter
     def dr(self, dr):
+        self._flag_greens(self.dr, dr)
         self._dr = dr
 
     @dz.setter
     def dz(self, dz):
+        self._flag_greens(self.dz, dz)
         self._dz = dz
 
     @angle.setter
     def angle(self, angle):
+        self._flag_greens(self.dz, dz)
         self._angle = angle
 
     def translate(self, vector):
+        self._flag_greens((0., 0.), vector)
         self.centroid += np.array(vector)
 
     def rotate(self, angle, pivot=(0., 0.)):
+        self._flag_greens(0., angle)
         self.angle += angle
         angle = math.pi*angle / 180
         c, s = np.cos(angle), np.sin(angle)
@@ -567,11 +652,15 @@ class MagnetRing(CurrentFilamentSet):
               Path.CLOSEPOLY]
 
     def __init__(self, r0, z0, width=0.01, height=0.01, mu_hat=0., **kwargs):
-        super().__init__(**kwargs)
         self.centroid = r0, z0
         self.width = width
         self.height = height
         self.mu_hat = mu_hat
+        if kwargs.get('weights', None) is None:
+            weights = np.ones(16)
+            weights[8:] = -1.
+            kwargs.update['weights'] = weights
+        super().__init__(**kwargs)
 
     @property
     def r0(self):
@@ -621,7 +710,7 @@ class MagnetRing(CurrentFilamentSet):
         return rotate(rz_pts, self.mu_hat, pivot=(r0, z0))
 
     @property
-    def verts(self):
+    def _verts(self):
         # Get indices for 4 corners of current filament array
         npts = self.npts
         idx = np.array([0, npts//2 - 1, npts - 1, npts//2, 0])
@@ -629,7 +718,7 @@ class MagnetRing(CurrentFilamentSet):
 
     @property
     def patch(self):
-        return patches.PathPatch(Path(self.verts, self._codes))
+        return patches.PathPatch(Path(self._verts, self._codes))
 
     @r0.setter
     def r0(self, r0):
@@ -655,15 +744,6 @@ class MagnetRing(CurrentFilamentSet):
     @mu_hat.setter
     def mu_hat(self, mu_hat):
         self._mu_hat = mu_hat
-
-    @CurrentFilamentSet.weights.setter
-    def weights(self, weights):
-        if weights is None:
-            weights = np.ones(16)
-            weights[8:] = -1.
-            self._weights = weights
-        else:
-            self._weights = np.asarray(weights)
 
     def translate(self, vector):
         self.centroid += np.array(vector)
