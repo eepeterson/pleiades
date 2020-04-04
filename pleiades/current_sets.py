@@ -18,6 +18,23 @@ def rotate(pts, angle, pivot=(0., 0.)):
     return (np.asarray(pts) - pivot) @ rotation + pivot
 
 
+def check_greens_on_get(func):
+    def wrapper(self):
+        if not self._uptodate:
+            self._compute_greens()
+        return func(self)
+    return wrapper
+
+
+def check_greens_on_set(name):
+    def actual_decorator(func):
+        def wrapper(self, value):
+            self._flag_greens(getattr(self, name), value)
+            return func(self, value)
+        return wrapper
+    return actual_decorator
+
+
 class CurrentFilamentSet(metaclass=ABCMeta):
     """Set of locations that have the same current value.
 
@@ -70,9 +87,8 @@ class CurrentFilamentSet(metaclass=ABCMeta):
 
     _EPS = 1E-12
     _SET_GREENS_TRIGS = ['weights', 'grid']
-    _GET_GREENS_TRIGS = ['gpsi', 'gBR', 'gBZ']
 
-    def __init__(self, current=1., weights=None, grid=None, **kwargs):
+    def __init__(self, current=1., weights=None, **kwargs):
         self._current = None
         self._weights = None
         self._grid = None
@@ -80,19 +96,12 @@ class CurrentFilamentSet(metaclass=ABCMeta):
 
         self.current = current
         self.weights = weights
-        self.grid = grid
         self.patch_kw = kwargs
 
-    def __setattr__(self, name, value):
-        if name in self._SET_GREENS_TRIGS:
-            self._flag_greens(getattr(self, name), value)
-        return super().__setattr__(name, value)
-
-    def __getattribute__(self, name):
-        if name in self._GET_GREENS_TRIGS:
-            if not self._uptodate:
-                self._compute_greens()
-        return super().__getattribute__(name)
+#    def __setattr__(self, name, value):
+#        if name in type(self)._SET_GREENS_TRIGS:
+#            self._flag_greens(getattr(self, name), value)
+#        return super().__setattr__(name, value)
 
     @abstractproperty
     def npts(self):
@@ -126,14 +135,17 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         return self._grid
 
     @property
+    @check_greens_on_get
     def gpsi(self):
         return self._gpsi
 
     @property
+    @check_greens_on_get
     def gBR(self):
         return self._gBR
 
     @property
+    @check_greens_on_get
     def gBZ(self):
         return self._gBZ
 
@@ -152,6 +164,7 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         self._current = current
 
     @weights.setter
+    @check_greens_on_set('weights')
     def weights(self, weights):
         if weights is None:
             self._weights = np.ones(self.npts)
@@ -195,21 +208,9 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         else:
             raise ValueError('Unsupported type for grid')
 
-        # If the grid is currently set to None, flag as out of date, otherwise
-        # perform some checks
-        if self._grid is None:
-            self._uptodate = False
-        else:
-            # If the grid points are the same shape as before we need to check
-            # if all their entries are equal if not the Green's functions need
-            # updating
-            if len(rz_pts) == len(self._grid_pts):
-                self._flag_greens(rz_pts, self._grid_pts)
-            else:
-                self._uptodate = False
-
         self._grid = grid
         self._grid_pts = rz_pts
+        self._uptodate = False
 
     @abstractmethod
     def translate(self, vector):
@@ -330,8 +331,11 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         future :
             The future value being set
         """
-        uptodate = np.all(np.isclose(current, future, rtol=0., atol=self._EPS))
-        self._uptodate = uptodate
+        if current is None:
+            self._uptodate = False
+        else:
+            uptodate = np.allclose(current, future, rtol=0., atol=self._EPS)
+            self._uptodate = uptodate
 
 
 class ArbitraryPoints(CurrentFilamentSet):
@@ -450,7 +454,7 @@ class RectangularCoil(CurrentFilamentSet):
     """
 
     _SET_GREENS_TRIGS = CurrentFilamentSet._SET_GREENS_TRIGS
-    _SET_GREENS_TRIGS = ['r0', 'z0', 'nr', 'nz', 'dr', 'dz' ,'angle']
+    _SET_GREENS_TRIGS += ['r0', 'z0', 'nr', 'nz', 'dr', 'dz' ,'angle']
 
     _codes = [Path.MOVETO,
               Path.LINETO,
@@ -459,12 +463,13 @@ class RectangularCoil(CurrentFilamentSet):
               Path.CLOSEPOLY]
 
     def __init__(self, r0, z0, nr=1, nz=1, dr=0.1, dz=0.1, angle=0., **kwargs):
-        self.centroid = (r0, z0)
-        self.nr = nr
-        self.nz = nz
-        self.dr = dr
-        self.dz = dz
-        self.angle = angle
+        self._r0 = r0
+        self._z0 = z0
+        self._nr = nr
+        self._nz = nz
+        self._dr = dr
+        self._dz = dz
+        self._angle = angle
         super().__init__(**kwargs)
 
     @property
@@ -550,6 +555,7 @@ class RectangularCoil(CurrentFilamentSet):
         return self.total_current / self.area
 
     @r0.setter
+    @check_greens_on_set('r0')
     def r0(self, r0):
         self._r0 = r0
 

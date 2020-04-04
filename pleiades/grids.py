@@ -30,14 +30,6 @@ class Grid(metaclass=ABCMeta):
     def __init__(self):
         pass
 
-    @abstractproperty
-    def _R(self):
-        pass
-
-    @abstractproperty
-    def _Z(self):
-        pass
-
     @property
     def R(self):
         return self._R
