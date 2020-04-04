@@ -1,5 +1,7 @@
 from pleiades.grids import *
 from pleiades.fieldmath import *
+from pleiades.checkvalue import *
+from pleiades.transforms import *
 from pleiades.current_sets import *
 from pleiades.device import *
 from pleiades.io import *

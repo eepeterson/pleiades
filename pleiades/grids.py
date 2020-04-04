@@ -2,6 +2,47 @@ from abc import ABCMeta, abstractproperty
 import math
 import numpy as np
 
+#    @grid.setter
+#    @cv.flag_greens_on_set
+#    def grid(self, grid):
+#        """Parses input grid variable into Nx2 array of points.
+#
+#        Checks value of current against the value of future and decides whether
+#        or not to set self._uptodate to True or False. This function is intended
+#        to make the user experience smoother while preserving performance by
+#        caching the Green's functions. Variables that require recomputing
+#        Green's functions include any positional variables or weights.
+#
+#        Parameters
+#        ----------
+#        grid : 2-tuple of np.array, or Nx2 np.array, or pleiades.Grid object
+#            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
+#            pleiades.Grid object to evaluate the Green's function on.
+#        """
+#        # Prep rz_pts array and get shape based on input 
+#        if isinstance(grid, Grid):
+#            shape = grid.R.shape
+#            rz_pts = np.empty((grid.R.size, 2))
+#            rz_pts[:, 0] = grid.R.ravel()
+#            rz_pts[:, 1] = grid.Z.ravel()
+#        elif isinstance(grid, np.ndarray):
+#            assert len(grid.shape) == 2
+#            assert grid.shape[1] == 2
+#            shape = grid.shape[0:1]
+#            rz_pts = grid
+#        elif isinstance(grid, Iterable):
+#            assert len(grid) == 2
+#            shape = grid[0].shape
+#            rz_pts = np.empty_like(grid[0])
+#            rz_pts[:, 0] = grid[0].ravel()
+#            rz_pts[:, 1] = grid[1].ravel()
+#        else:
+#            raise ValueError('Unsupported type for grid')
+#
+#        self._grid = grid
+#        self._grid_pts = rz_pts
+#        self._uptodate = False
+
 
 class Grid(metaclass=ABCMeta):
     """A grid in the R-Z plane for calculating magnetic fields and flux.
@@ -28,7 +69,8 @@ class Grid(metaclass=ABCMeta):
         theta coordinates for the mesh in a spherical coordinate frame.
     """
     def __init__(self):
-        pass
+        self._R = None
+        self._Z = None
 
     @property
     def R(self):
@@ -168,6 +210,7 @@ class RectGrid(Grid):
         The number of z mesh points.
     """
     def __init__(self, rmin=0., rmax=1., nr=101, zmin=-0.5, zmax=0.5, nz=101):
+        super().__init__()
         self._rmin = rmin
         self._rmax = rmax
         self._nr = nr

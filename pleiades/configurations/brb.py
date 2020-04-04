@@ -1,23 +1,31 @@
 import os
 import warnings
+import math
 import numpy as np
 import matplotlib as mpl
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Wedge
 from matplotlib.collections import PatchCollection
 
 from pleiades import ArbitraryPoints, RectangularCoil, MagnetRing, Device
 
-class TREXCoil(ArbitraryPointsSet):
-    def __init__(self, z0, **kwargs):
-        self.z0 = z0
-        self._dr = 0.0134166
-        self._dz = 0.0134166
-        self._npts = 88
-        r = 2.00467 + np.linspace(0, .067083, 6)
-        z = self.z0 + np.linspace(-.105469,.105469, 16)
+class TREXCoil(ArbitraryPoints):
+    """TREX STUFF"""
+    _RMIN = 2.00467
+    _DR = 0.0134166
+    _DZ = 0.0140625
+    _COND_AREA = _DR*_DR
+    _NPTS = 88
+    _Z_REL_POS = np.linspace(-.105469,.105469, 16)
+    _R_REL_POS = np.linspace(0, .067083, 6)
+
+    def __init__(self, z0=1.1, **kwargs):
+        self._z0 = 0.
+        r = self._RMIN + self._R_REL_POS
+        z = z0 + self._Z_REL_POS
         rz_pts = [(ri, zi) for ri in r[:5] for zi in z]
         rz_pts.extend([(r[5], zi) for zi in (z[::2] + z[1::2])/2])
         super().__init__(np.array(rz_pts), **kwargs)
+        self.z0 = z0
 
     @property
     def z0(self):
@@ -25,27 +33,23 @@ class TREXCoil(ArbitraryPointsSet):
 
     @property
     def dr(self):
-        return self._dr
+        return self._DR
 
     @property
     def dz(self):
-        return self._dz
+        return self._DZ
 
     @property
     def npts(self):
-        return self._npts
+        return self._NPTS
 
     @property
-    def rz_pts(self):
-        pass
-
-    @property
-    def verts(self):
+    def _verts(self):
         pass
 
     @property
     def area(self):
-        return self.dr*self.dz*self.npts
+        return self._COND_AREA*self._NPTS
 
     @property
     def total_current(self):
@@ -61,43 +65,43 @@ class TREXCoil(ArbitraryPointsSet):
         self._rz_pts = self._rz_pts + delta_z
         self._z0 = z0
 
-    @rz_pts.setter
+    @ArbitraryPoints.rz_pts.setter
     def rz_pts(self, rz_pts):
-        msg = ('TREX coils cannot have their points changed except through the '
-               'z0 attribute')
+        msg = ('rz_pts for TREXCoil must be changed using the z0 attribute')
         raise NotImplementedError(msg)
 
 
-class Dipole(Component):
-    """Internal dipole Magnet comprised of 2 cylindrical SmCo magnets.
-
-    Attributes:
-        magnets (list): list of Magnet objects comprising this instance
-        patches (list of matplotlib.patches.Polygon instances): patches representing the vessel magnets
-    """
-
-    def __init__(self, **kwargs):
-        super(Dipole,self).__init__()
-        r0,z0 = kwargs.pop("loc",(0,0))
-        muhat = kwargs.pop("muhat",0)
-        labels = kwargs.pop("labels",["dipole"])
-        nprocs = kwargs.pop("nprocs",[1])
-        currents = kwargs.pop("currents",[2901.0])
-        patch_mask = kwargs.pop("patch_mask",[0])
-        # Build internal dipole magnets
-        width = (2.75 / 2 - .125) * .0254
-        height = 2.5 / 2 * .0254
-        delta = (1.25 / 2 + .125) * .0254
-        r1 = r0 + .125 * .0254 + width / 2.0  # + delta*np.sin(np.pi*mu_hat/180.0)
-        r2 = r1  # rho0 - delta*np.sin(np.pi*mu_hat/180.0)
-        z1 = z0 + delta  # *np.cos(np.pi*mu_hat/180.0)
-        z2 = z0 - delta  # *np.cos(np.pi*mu_hat/180.0)
-        m1 = MagnetGroup(rz_pts=[(r1,z1),(r2,z2)],mu_hats=[muhat,muhat],height=height,width=width,current=currents[0],**kwargs)
+#class Dipole(Component):
+#    """Internal dipole Magnet comprised of 2 cylindrical SmCo magnets.
+#
+#    Attributes:
+#        magnets (list): list of Magnet objects comprising this instance
+#        patches (list of matplotlib.patches.Polygon instances): patches representing the vessel magnets
+#    """
+#
+#    def __init__(self, **kwargs):
+#        super(Dipole,self).__init__()
+#        r0,z0 = kwargs.pop("loc",(0,0))
+#        muhat = kwargs.pop("muhat",0)
+#        labels = kwargs.pop("labels",["dipole"])
+#        nprocs = kwargs.pop("nprocs",[1])
+#        currents = kwargs.pop("currents",[2901.0])
+#        patch_mask = kwargs.pop("patch_mask",[0])
+#        # Build internal dipole magnets
+#        width = (2.75 / 2 - .125) * .0254
+#        height = 2.5 / 2 * .0254
+#        delta = (1.25 / 2 + .125) * .0254
+#        r1 = r0 + .125 * .0254 + width / 2.0  # + delta*np.sin(np.pi*mu_hat/180.0)
+#        r2 = r1  # rho0 - delta*np.sin(np.pi*mu_hat/180.0)
+#        z1 = z0 + delta  # *np.cos(np.pi*mu_hat/180.0)
+#        z2 = z0 - delta  # *np.cos(np.pi*mu_hat/180.0)
+#        m1 = MagnetGroup(rz_pts=[(r1,z1),(r2,z2)],mu_hats=[muhat,muhat],height=height,width=width,current=currents[0],**kwargs)
 
 
 class BRB(Device):
     def __init__(self):
         # Global default patch settings
+        super().__init__()
         kwargs = {'fc': '.35', 'ec': 'k'}
 
         # Set TREX HH coil default parameters
@@ -139,6 +143,5 @@ class BRB(Device):
     def add_anode(self):
         raise NotImplementedError("Can't add anode to BRB yet")
 
-    def add_sweep(self,center,r,theta1,theta2,width=None,**kwargs):
+    def add_sweep(self, center,r,theta1,theta2,width=None,**kwargs):
         self.patches.append(Wedge(center,r,theta1,theta2,width=width,**kwargs))
-
