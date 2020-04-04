@@ -14,7 +14,7 @@ def compute_greens(rzw, rz_pts):
         An Nx3 array whose columns are r locations, z locations, and current
         weights respectively for the current filaments.
     rz_pts: Nx2 np.array
-        An Nx2 array whose columns are r locations and z locations for the grid
+        An Nx2 array whose columns are r locations and z locations for the mesh
         points where we want to calculate the Green's functions.
 
     Returns
@@ -26,7 +26,7 @@ def compute_greens(rzw, rz_pts):
     simplefilter('ignore', RuntimeWarning)
 
     # Begin calculation of Green's functions based on vector potential
-    # psi = R*A_phi from a current loop at r0, z0 on a grid specified by
+    # psi = R*A_phi from a current loop at r0, z0 on a mesh specified by
     # r and z in cylindrical coordinates and with SI units.
     r, z = rz_pts[:,0], rz_pts[:, 1]
     n = len(r)
@@ -77,7 +77,7 @@ def compute_greens_2d(rzw_list, rz_pts):
         An Nx3 array whose columns are r locations, z locations, and current
         weights respectively for the current filaments.
     rz_pts: Nx2 np.array
-        An Nx2 array whose columns are r locations and z locations for the grid
+        An Nx2 array whose columns are r locations and z locations for the mesh
         points where we want to calculate the Green's functions.
 
     Returns
@@ -89,7 +89,7 @@ def compute_greens_2d(rzw_list, rz_pts):
     simplefilter('ignore', RuntimeWarning)
 
     # Begin calculation of Green's functions based on vector potential
-    # psi = R*A_phi from a current loop at r0, z0 on a grid specified by
+    # psi = R*A_phi from a current loop at r0, z0 on a mesh specified by
     # r and z in cylindrical coordinates and with SI units.
     r, z = rz_pts[:,0], rz_pts[:, 1]
     n = len(r)

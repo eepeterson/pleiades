@@ -1,10 +1,13 @@
 from abc import ABCMeta
 import numpy as np
+
 from matplotlib.collections import PatchCollection
-from pleiades import CurrentFilamentSet, compute_greens, compute_greens_2d
+from pleiades.current_sets import CurrentFilamentSet
+from pleiades.fieldmath import compute_greens, compute_greens_2d
+from pleiades.mixin import FieldsOperator2D
 
 
-class Device(metaclass=ABCMeta):
+class Device(FieldsOperator2D):
     """A container for a full configuration of magnets for an experiment
 
     Parameters
@@ -12,18 +15,18 @@ class Device(metaclass=ABCMeta):
 
     Attributes
     ----------
-    grid : pleiades.Grid object
-        A grid on which to compute Green's functions and fields
+    mesh : pleiades.Mesh object
+        A mesh on which to compute Green's functions and fields
     R : np.array
-        The R locations of the grid
+        The R locations of the mesh
     Z : np.array
-        The Z locations of the grid
+        The Z locations of the mesh
     psi : np.array
-        The psi values on the grid
+        The psi values on the mesh
     BR : np.array
-        The BR values on the grid
+        The BR values on the mesh
     BZ : np.array
-        The BZ values on the grid
+        The BZ values on the mesh
     patches : list
         A list of patch objects for the configuration
     patch_coll : matplotlib.patches.PatchCollection
@@ -54,154 +57,21 @@ class Device(metaclass=ABCMeta):
     def currents(self):
         return np.array([obj.current for name, obj in self.current_sets])
 
-    def _compute_greens(self):
-        """Compute Green's function matrices for all CurrentFilamentSets"""
-        m = len(self.current_sets)
-        n = len(self.R.ravel())
-        gpsi = np.empty((m, n))
-        gbr = np.empty((m, n))
-        gbz = np.empty((m, n))
-        for i, cs in enumerate([obj for name, obj in self.current_sets]):
-            gpsi[i, :] = cs.gpsi().ravel()
-            gbr[i, :] = cs.gBR().ravel()
-            gbz[i, :] = cs.gBZ().ravel()
-
-        self._gpsi = gpsi
-        self._gBR = gbr
-        self._gBZ = gbz
+    @property
+    def rzw(self):
+        return [cset.rzw for cset in self.current_sets]
 
     @property
-    def grid(self):
-        return self._grid
+    def mesh(self):
+        return self._mesh
 
     @property
     def R(self):
-        return self._grid.R
+        return self._mesh.R
 
     @property
     def Z(self):
-        return self._grid.Z
-
-    def gpsi(self, rz_pts=None):
-        """Compute the Green's function for magnetic flux, :math:`psi`.
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate the magnetic flux. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gpsi : ndarray
-            1D array representing the Green's function for flux and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gpsi
-        return compute_greens_2d([c.rzw for c in self.current_sets], rz_pts)[0]
-
-    def gBR(self, rz_pts=None):
-        """Compute the Green's function for the radial magnetic field, BR
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate BR. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gBR : ndarray
-            1D array representing the Green's function for BR and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gBR
-        return compute_greens_2d([c.rzw for c in self.current_sets], rz_pts)[1]
-
-    def gBZ(self, rz_pts=None):
-        """Compute the Green's function for the vertical magnetic field, BZ
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate BZ. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gBZ : ndarray
-            1D array representing the Green's function for BZ and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gBZ
-        return compute_greens_2d([c.rzw for c in self.current_sets], rz_pts)[2]
-
-    def psi(self, currents=None, rz_pts=None):
-        """Compute the magnetic flux, :math:`psi`.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value in amps to use instead of
-            CurrentFilamentSet.current. Defaults to None, in which case the
-            current attribute is used to calculate the flux.
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate the magnetic flux. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        psi : ndarray
-        """
-        currents = self.currents if currents is None else currents
-        return currents @ self.gpsi(rz_pts=rz_pts)
-
-    def BR(self, currents=None, rz_pts=None):
-        """Compute the radial component of the magnetic field, BR.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value to override the current attribute for
-            calculating the field. Defaults to None, which causes the current
-            attribute to be used for the calculation
-
-        Returns
-        -------
-        BR : np.array
-        """
-        currents = self.currents if currents is None else currents
-        return currents @ self.gBR(rz_pts=rz_pts)
-
-    def BZ(self, currents=None, rz_pts=None):
-        """Compute the z component of the magnetic field, BZ.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value to override the current attribute for
-            calculating the field. Defaults to None, which causes the current
-            attribute to be used for the calculation
-
-        Returns
-        -------
-        BZ : np.array
-        """
-        currents = self.currents if currents is None else currents
-        return currents @ self.gBZ(rz_pts=rz_pts)
+        return self._mesh.Z
 
     @property
     def patches(self):
@@ -215,23 +85,23 @@ class Device(metaclass=ABCMeta):
     def _uptodate(self):
         return all([obj._uptodate for name, obj in self.current_sets])
 
-    @grid.setter
-    def grid(self, grid):
-        self._grid = grid
+    @mesh.setter
+    def mesh(self, mesh):
+        self._mesh = mesh
         for cset in [obj for name, obj in self.current_sets]:
-            cset.grid = grid
+            cset.mesh = mesh
 
     def plot_currents(self, ax, **kwargs):
         for cset in [obj for name, obj in self.current_sets]:
             cset.plot(ax, **kwargs)
 
     def plot_psi(self, ax, *args, **kwargs):
-        R, Z = self.grid.R, self.grid.Z
+        R, Z = self.mesh.R, self.mesh.Z
         return ax.contour(R, Z, self.psi().reshape(R.shape), *args, **kwargs)
 
     def plot_modB(self, ax, *args, **kwargs):
         modB = np.sqrt(self.BR()**2 + self.BZ()**2)
-        return ax.contour(self.grid.R, self.grid.Z, modB, *args, **kwargs)
+        return ax.contour(self.mesh.R, self.mesh.Z, modB, *args, **kwargs)
 
     def plot(self, ax, *args, **kwargs):
         ax.add_collection(self.patch_coll)

@@ -7,7 +7,8 @@ from scipy.special import ellipk, ellipe
 from matplotlib.path import Path
 import matplotlib.patches as patches
 
-from pleiades import Grid, compute_greens
+from pleiades.mixin import FieldsOperator
+from pleiades.fieldmath import compute_greens
 import pleiades.checkvalue as cv
 from pleiades.transforms import rotate
 
@@ -17,8 +18,8 @@ class CurrentFilamentSet(metaclass=ABCMeta):
 
     A CurrentFilamentSet represents a set of axisymmetric current centroids with
     associated current weights to describe the current ratios between all the
-    centroids. In addition a CurrentFilamentSet implements the Green's function
-    functionality for computing magnetic fields and flux on an R-Z grid. A
+    centroids. In addition, a CurrentFilamentSet implements the Green's function
+    functionality for computing magnetic fields and flux on an R-Z mesh. A
     CurrentFilamentSet is not intended to be instatiated directly, but serves as
     the base class for all concrete current set classes and defines the
     minimum functional interface and protocols of a current set. Lastly a
@@ -28,49 +29,60 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     Parameters
     ----------
     current : float, optional
-        The current to be used for Green's function.
+        The current to be used for calculating fields from the Green's
+        functions. Defaults to 1 amp.
     weights : iterable, optional
-        The weights for all the current locations. This enables having both
+        The weights for all the current locations. The current weight is
+        effectively a current multiplier for a given position that is
+        incorporated into the Green's function. This enables having both
         positive and negative currents in an object at the same time as well as
         current profile shaping in the case of permanent magnets. Defaults to
         1 for every location.
+    patch_kw : dict
+        Dictionary of any matplotlib.patches.Patch keyword arguments. No type
+        checking is performed on these inputs they are simply assigned to the
+        patch_kw attribute.
     **kwargs
-        Any matplotlib.patches.Patch keyword arguments. No type checking is
-        performed on these inputs they are simply assigned to the patch_kw
-        attribute.
+        Any keyword arguments intended to be passed to FieldsOperator object
+        using cooperative inheritance.
 
     Attributes
     ----------
     current : float
-        The current in the CurrentGroup in amps.
+        The current to be used for calculating fields from the Green's
+        functions. Defaults to 1 amp.
     weights : iterable
-        The weights for all the current locations. This enables having both
+        The weights for all the current locations. The current weight is
+        effectively a current multiplier for a given position that is
+        incorporated into the Green's function. This enables having both
         positive and negative currents in an object at the same time as well as
         current profile shaping in the case of permanent magnets. Defaults to
-        1 for every location
+        1 for every location.
     npts : int
-        Integer for the number of current filaments in this object.
-    rz_pts : np.ndarray
-        Nx2 array representing R, Z current centroids.
+        Integer for the number of current filaments in this CurrentFilamentSet
+        (read-only).
+    rz_pts : ndarray
+        An Nx2 array representing (R, Z) coordinates for current centroids.
+        Units are meters and the coordinate system is cylindrical (read-only)
     rzw : np.ndarray
-        An Nx3 array whos rows are rzw[i, :] = rloc, zloc, weight which
-        describe the current location and current weight for each filament in
-        the CurrentFilamentSet. This is simply a helper attribute for combining
-        rz_pts and weights.
+        An Nx3 array whos columns describe the current centroid radial
+        coordinate (R), vertical coordinate (Z), and current weight (W) for each
+        filament in the CurrentFilamentSet (read-only).
     total_current : float
         The total current being carried in the filament set. This is equal to
         the current times the sum of the weights.
+    patch_kw : dict
+        A dictionary of valid matplotlib.patches.Patch keyword arguments
+
     """
 
-    def __init__(self, current=1., weights=None, **kwargs):
+    def __init__(self, current=1., weights=None, patch_kw=None, **kwargs):
         self._current = None
         self._weights = None
-        self._grid = None
-        self._grid_pts = None
-
         self.current = current
         self.weights = weights
-        self.patch_kw = kwargs
+        self.patch_kw = patch_kw
+        super().__init__(**kwargs)
 
     @abstractproperty
     def npts(self):
@@ -100,10 +112,6 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         return rzw
 
     @property
-    def grid(self):
-        return self._grid
-
-    @property
     def total_current(self):
         return self.current*np.sum(self.weights)
 
@@ -126,46 +134,9 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             assert len(weights) == self.npts
             self._weights = np.asarray(weights)
 
-    @grid.setter
-    @cv.flag_greens_on_set
-    def grid(self, grid):
-        """Parses input grid variable into Nx2 array of points.
-
-        Checks value of current against the value of future and decides whether
-        or not to set self._uptodate to True or False. This function is intended
-        to make the user experience smoother while preserving performance by
-        caching the Green's functions. Variables that require recomputing
-        Green's functions include any positional variables or weights.
-
-        Parameters
-        ----------
-        grid : 2-tuple of np.array, or Nx2 np.array, or pleiades.Grid object
-            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
-            pleiades.Grid object to evaluate the Green's function on.
-        """
-        # Prep rz_pts array and get shape based on input 
-        if isinstance(grid, Grid):
-            shape = grid.R.shape
-            rz_pts = np.empty((grid.R.size, 2))
-            rz_pts[:, 0] = grid.R.ravel()
-            rz_pts[:, 1] = grid.Z.ravel()
-        elif isinstance(grid, np.ndarray):
-            assert len(grid.shape) == 2
-            assert grid.shape[1] == 2
-            shape = grid.shape[0:1]
-            rz_pts = grid
-        elif isinstance(grid, Iterable):
-            assert len(grid) == 2
-            shape = grid[0].shape
-            rz_pts = np.empty_like(grid[0])
-            rz_pts[:, 0] = grid[0].ravel()
-            rz_pts[:, 1] = grid[1].ravel()
-        else:
-            raise ValueError('Unsupported type for grid')
-
-        self._grid = grid
-        self._grid_pts = rz_pts
-        self._uptodate = False
+    @total_current.setter
+    def total_current(self, total_current):
+        self.current = total_current / np.sum(self.weights)
 
     @abstractmethod
     def translate(self, vector):
@@ -188,127 +159,6 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         pivot : iterable of float, optional
             The (R, Z) location of the pivot. Defaults to (0., 0.).
         """
-
-    def gpsi(self, rz_pts=None):
-        """Compute the Green's function for magnetic flux, :math:`psi`.
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate the magnetic flux. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gpsi : ndarray
-            1D array representing the Green's function for flux and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gpsi
-        return compute_greens(self.rzw, rz_pts)[0]
-
-    def gBR(self, rz_pts=None):
-        """Compute the Green's function for the radial magnetic field, BR
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate BR. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gBR : ndarray
-            1D array representing the Green's function for BR and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gBR
-        return compute_greens(self.rzw, rz_pts)[1]
-
-    def gBZ(self, rz_pts=None):
-        """Compute the Green's function for the vertical magnetic field, BZ
-
-        Parameters
-        ----------
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate BZ. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        gBZ : ndarray
-            1D array representing the Green's function for BZ and whose size
-            is equal to the number of rz_pts.
-        """
-        if rz_pts is None:
-            if not self._uptodate:
-                self._compute_greens()
-            return self._gBZ
-        return compute_greens(self.rzw, rz_pts)[2]
-
-    def psi(self, current=None, rz_pts=None):
-        """Compute the magnetic flux, :math:`psi`.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value in amps to use instead of
-            CurrentFilamentSet.current. Defaults to None, in which case the
-            current attribute is used to calculate the flux.
-        rz_pts : ndarray, optional
-            An Nx2 array of points representing (R, Z) coordinates at which to
-            calculate the magnetic flux. Defaults to None, in which case the
-            CurrentFilamentSet.grid attribute is used.
-
-        Returns
-        -------
-        psi : ndarray
-        """
-        current = self.current if current is None else current
-        return current*self.gpsi(rz_pts=rz_pts)
-
-    def BR(self, current=None, rz_pts=None):
-        """Compute the radial component of the magnetic field, BR.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value to override the current attribute for
-            calculating the field. Defaults to None, which causes the current
-            attribute to be used for the calculation
-
-        Returns
-        -------
-        BR : np.array
-        """
-        current = self.current if current is None else current
-        return current*self.gBR
-
-    def BZ(self, current=None, rz_pts=None):
-        """Compute the z component of the magnetic field, BZ.
-
-        Parameters
-        ----------
-        current : float, optional
-            Specify a current value to override the current attribute for
-            calculating the field. Defaults to None, which causes the current
-            attribute to be used for the calculation
-
-        Returns
-        -------
-        BZ : np.array
-        """
-        current = self.current if current is None else current
-        return current*self.gBZ
 
     def simplify(self):
         """Create a single coil object from weighted sum of current centroids.
@@ -339,17 +189,6 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         markers = self._markers
         for i, (r, z, w) in enumerate(self.rzw):
             ax.plot(r, z, marker=markers[i], **kwargs)
-
-    def _compute_greens(self):
-        """Compute and assign the Green's functions for psi, BR, and BZ"""
-        # Calculate Green's functions 
-        gpsi, gBR, gBZ = compute_greens(self.rzw, self._grid_pts)
-        self._gpsi = gpsi
-        self._gBR = gBR
-        self._gBZ = gBZ
-
-        # Notify instance that the Green's functions are up to date
-        self._uptodate = True
 
 
 class ArbitraryPoints(CurrentFilamentSet):
@@ -397,7 +236,7 @@ class ArbitraryPoints(CurrentFilamentSet):
         self._rz_pts = (self.rz_pts - pivot) @ rotation + np.asarray(pivot)
 
 
-class RectangularCoil(CurrentFilamentSet):
+class RectangularCoil(CurrentFilamentSet, FieldsOperator):
     """A rectangular cross section coil in the R-Z plane
 
     Parameters
@@ -465,7 +304,8 @@ class RectangularCoil(CurrentFilamentSet):
               Path.LINETO,
               Path.CLOSEPOLY]
 
-    def __init__(self, r0, z0, nr=1, nz=1, dr=0.1, dz=0.1, angle=0., **kwargs):
+    def __init__(self, r0=1., z0=0., nr=1, nz=1, dr=0.1, dz=0.1,
+                 angle=0., **kwargs):
         self._r0 = r0
         self._z0 = z0
         self._nr = nr

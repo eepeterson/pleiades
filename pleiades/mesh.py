@@ -1,57 +1,17 @@
 from abc import ABCMeta, abstractproperty
+from collections.abc import Iterable
 import math
 import numpy as np
 
-#    @grid.setter
-#    @cv.flag_greens_on_set
-#    def grid(self, grid):
-#        """Parses input grid variable into Nx2 array of points.
-#
-#        Checks value of current against the value of future and decides whether
-#        or not to set self._uptodate to True or False. This function is intended
-#        to make the user experience smoother while preserving performance by
-#        caching the Green's functions. Variables that require recomputing
-#        Green's functions include any positional variables or weights.
-#
-#        Parameters
-#        ----------
-#        grid : 2-tuple of np.array, or Nx2 np.array, or pleiades.Grid object
-#            An Nx2 array of (R, Z) points, or a tuple of R, Z pts or a
-#            pleiades.Grid object to evaluate the Green's function on.
-#        """
-#        # Prep rz_pts array and get shape based on input 
-#        if isinstance(grid, Grid):
-#            shape = grid.R.shape
-#            rz_pts = np.empty((grid.R.size, 2))
-#            rz_pts[:, 0] = grid.R.ravel()
-#            rz_pts[:, 1] = grid.Z.ravel()
-#        elif isinstance(grid, np.ndarray):
-#            assert len(grid.shape) == 2
-#            assert grid.shape[1] == 2
-#            shape = grid.shape[0:1]
-#            rz_pts = grid
-#        elif isinstance(grid, Iterable):
-#            assert len(grid) == 2
-#            shape = grid[0].shape
-#            rz_pts = np.empty_like(grid[0])
-#            rz_pts[:, 0] = grid[0].ravel()
-#            rz_pts[:, 1] = grid[1].ravel()
-#        else:
-#            raise ValueError('Unsupported type for grid')
-#
-#        self._grid = grid
-#        self._grid_pts = rz_pts
-#        self._uptodate = False
 
+class Mesh(metaclass=ABCMeta):
+    """A mesh in the R-Z plane for calculating magnetic fields and flux.
 
-class Grid(metaclass=ABCMeta):
-    """A grid in the R-Z plane for calculating magnetic fields and flux.
-
-    The Grid class is a base class for concrete representations of grids that
-    may be used in mesh based calculations. These grids can be 1D or 2D
-    structured grids as well as a list of arbitrary coordinate pairs as in the
-    case of unstructured grids. This class outlines the interface and protocols
-    that define a grid in the Pleiades package.
+    The Mesh class is a base class for concrete representations of meshs that
+    may be used in mesh based calculations. These meshs can be 1D or 2D
+    structured meshs as well as a list of arbitrary coordinate pairs as in the
+    case of unstructured meshs. This class outlines the interface and protocols
+    that define a mesh in the Pleiades package.
 
     Attributes
     ----------
@@ -92,16 +52,62 @@ class Grid(metaclass=ABCMeta):
     def shape(self):
         return self._R.shape
 
+    @classmethod
+    def to_points(cls, mesh):
+        """Take a mesh or numpy array, return Nx2 points array"""
+        if isinstance(mesh, cls):
+            shape = mesh.R.shape
+            rz_pts = np.empty((mesh.R.size, 2))
+            rz_pts[:, 0] = mesh.R.ravel()
+            rz_pts[:, 1] = mesh.Z.ravel()
+        elif isinstance(mesh, np.ndarray):
+            assert len(mesh.shape) == 2
+            assert mesh.shape[1] == 2
+            shape = mesh.shape[0:1]
+            rz_pts = mesh
+        elif isinstance(mesh, Iterable):
+            assert len(mesh) == 2
+            shape = mesh[0].shape
+            rz_pts = np.empty_like(mesh[0])
+            rz_pts[:, 0] = mesh[0].ravel()
+            rz_pts[:, 1] = mesh[1].ravel()
+        else:
+            raise ValueError('Unsupported type for mesh')
 
-class PointsGrid(Grid):
-    """An unstructured grid specified by two lists of coordinate points.
+        return rz_pts
+
+    @classmethod
+    def from_array(cls, mesh):
+        mesh = np.asarray(mesh)
+        if mesh.dim == 2:
+            if mesh.shape[1] == 2:
+                rpts, zpts = mesh[:, 0], mesh[1, :]
+            else:
+                rpts, zpts = mesh[0, :], mesh[:, 1]
+            shape = rpts.shape
+            return PointsMesh(rpts, zpts)
+        elif mesh.dim == 3:
+            if mesh.shape[0] == 2:
+                rpts, zpts = mesh[0, :, :], mesh[1, :, :]
+                shape = rpts.shape
+                kwargs = {'rmin': np.amin(rpts), 'rmax': np.amax(rpts),
+                          'zmin': np.amin(zpts), 'zmax': np.amax(zpts),
+                          'nr': rpts.shape[1], 'nz': rpts.shape[0]}
+
+                return RectMesh(**kwargs)
+            else:
+                raise ValueError
+
+
+class PointsMesh(Mesh):
+    """An unstructured mesh specified by two lists of coordinate points.
 
     Parameters
     ----------
     rpts : iterable of float
-        List of cylindrical r values for the unstructured grid in meters.
+        List of cylindrical r values for the unstructured mesh in meters.
     zpts : iterable of float
-        List of z values for the unstructured grid in meters.
+        List of z values for the unstructured mesh in meters.
     """
     def __init__(self, rpts, zpts):
         assert len(rpts) == len(zpts)
@@ -109,7 +115,7 @@ class PointsGrid(Grid):
         self._Z = np.asarray(zpts).squeeze()
 
 
-class RChord(PointsGrid):
+class RChord(PointsMesh):
     """A 1D chord of cylindrical radii at fixed height z.
 
     Parameters
@@ -124,7 +130,7 @@ class RChord(PointsGrid):
         super().__init__(rpts, zpts)
 
 
-class ZChord(PointsGrid):
+class ZChord(PointsMesh):
     """A 1D chord of Z values at fixed cylindrical radius.
 
     Parameters
@@ -139,7 +145,7 @@ class ZChord(PointsGrid):
         super().__init__(rpts, zpts)
 
 
-class SphericalRChord(PointsGrid):
+class SphericalRChord(PointsMesh):
     """A 1D chord of spherical radius at fixed polar angle theta.
 
     Parameters
@@ -157,7 +163,7 @@ class SphericalRChord(PointsGrid):
         super().__init__(rpts, zpts)
 
 
-class ThetaChord(PointsGrid):
+class ThetaChord(PointsMesh):
     """A 1D chord of polar angles at fixed spherical radius r.
 
     Parameters
@@ -176,8 +182,8 @@ class ThetaChord(PointsGrid):
         super().__init__(rpts, zpts)
 
 
-class RectGrid(Grid):
-    """A regular linearly spaced 2D R-Z grid.
+class RectMesh(Mesh):
+    """A regular linearly spaced 2D R-Z mesh.
 
     Parameters
     ----------
@@ -217,7 +223,7 @@ class RectGrid(Grid):
         self._zmin = zmin
         self._zmax = zmax
         self._nz = nz
-        self._set_grid()
+        self._set_mesh()
 
     @property
     def rmin(self):
@@ -246,34 +252,34 @@ class RectGrid(Grid):
     @rmin.setter
     def rmin(self, rmin):
         self._rmin = rmin
-        self._set_grid()
+        self._set_mesh()
 
     @rmax.setter
     def rmax(self, rmax):
         self._rmax = rmax
-        self._set_grid()
+        self._set_mesh()
 
     @nr.setter
     def nr(self, nr):
         self._nr = nr
-        self._set_grid()
+        self._set_mesh()
 
     @zmin.setter
     def zmin(self, zmin):
         self._zmin = zmin
-        self._set_grid()
+        self._set_mesh()
 
     @zmax.setter
     def zmax(self, zmax):
         self._zmax = zmax
-        self._set_grid()
+        self._set_mesh()
 
     @nz.setter
     def nz(self, nz):
         self._nz = nz
-        self._set_grid()
+        self._set_mesh()
 
-    def _set_grid(self):
+    def _set_mesh(self):
         r = np.linspace(self.rmin, self.rmax, self.nr)
         z = np.linspace(self.zmin, self.zmax, self.nz)
         self._R, self._Z = np.meshgrid(r, z)
@@ -295,7 +301,7 @@ class RectGrid(Grid):
 #    return Lx*np.array(sorted(zlist))
 #
 #
-#def stretched_grid(nx,Lx,kfac):
+#def stretched_mesh(nx,Lx,kfac):
 #    x = np.zeros(nx)
 #    dx = np.zeros(nx)
 #    dx1 = (kfac-1)/(kfac**(nx-1)-1)*Lx
