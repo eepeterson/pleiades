@@ -3,11 +3,10 @@ import numpy as np
 
 from matplotlib.collections import PatchCollection
 from pleiades.current_sets import CurrentFilamentSet
-from pleiades.fieldmath import compute_greens, compute_greens_2d
-from pleiades.mixin import FieldsOperator2D
+from pleiades.fields import FieldsOperator
 
 
-class Device(FieldsOperator2D):
+class Device(FieldsOperator):
     """A container for a full configuration of magnets for an experiment
 
     Parameters
@@ -35,6 +34,7 @@ class Device(FieldsOperator2D):
 
     def __init__(self, **kwargs):
         self._current_sets = []
+        super().__init__(rank=2, **kwargs)
 
     def __setattr__(self, name, value):
         if isinstance(value, CurrentFilamentSet):

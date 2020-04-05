@@ -7,8 +7,7 @@ from scipy.special import ellipk, ellipe
 from matplotlib.path import Path
 import matplotlib.patches as patches
 
-from pleiades.mixin import FieldsOperator
-from pleiades.fieldmath import compute_greens
+from pleiades.fields import FieldsOperator
 import pleiades.checkvalue as cv
 from pleiades.transforms import rotate
 
