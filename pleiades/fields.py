@@ -232,6 +232,8 @@ class FieldsOperator(metaclass=ABCMeta):
         self._gpsi = None
         self._gBR = None
         self._gBZ = None
+        if rank == 1:
+            self._uptodate = False
         self.rank = rank
         self.mesh = mesh
 
@@ -338,13 +340,12 @@ class FieldsOperator(metaclass=ABCMeta):
         -------
         psi : ndarray
         """
+        current = current if current is not None else self.current
         if self.rank == 1:
-            current = current if current is not None else self.current
             return current*self.gpsi(mesh=mesh)
 
         if self.rank == 2:
-            currents = self.currents if currents is None else currents
-            return currents @ self.gpsi(mesh=mesh)
+            return current @ self.gpsi(mesh=mesh)
 
     def BR(self, current=None, mesh=None):
         """Compute the radial component of the magnetic field, BR.
@@ -360,13 +361,12 @@ class FieldsOperator(metaclass=ABCMeta):
         -------
         BR : np.array
         """
+        current = current if current is not None else self.current
         if self.rank == 1:
-            current = current if current is not None else self.current
             return current*self.gBR(mesh=mesh)
 
         if self.rank == 2:
-            currents = self.currents if currents is None else currents
-            return currents @ self.gBR(mesh=mesh)
+            return current @ self.gBR(mesh=mesh)
 
     def BZ(self, current=None, mesh=None):
         """Compute the z component of the magnetic field, BZ.
@@ -382,13 +382,12 @@ class FieldsOperator(metaclass=ABCMeta):
         -------
         BZ : np.array
         """
+        current = current if current is not None else self.current
         if self.rank == 1:
-            current = current if current is not None else self.current
             return current*self.gBR(mesh=mesh)
 
         if self.rank == 2:
-            currents = self.currents if currents is None else currents
-            return currents @ self.gBR(mesh=mesh)
+            return current @ self.gBR(mesh=mesh)
 
     def _compute_greens(self):
         """Compute and assign the Green's functions for psi, BR, and BZ"""
@@ -397,19 +396,20 @@ class FieldsOperator(metaclass=ABCMeta):
             gpsi, gBR, gBZ = compute_greens(self.rzw, Mesh.to_points(self.mesh))
 
         if self.rank == 2:
-            m = len(self.current_sets)
+            m = len(self.current)
             n = len(self.R.ravel())
             gpsi = np.empty((m, n))
-            gbr = np.empty((m, n))
-            gbz = np.empty((m, n))
+            gBR = np.empty((m, n))
+            gBZ = np.empty((m, n))
             for i, cs in enumerate([obj for name, obj in self.current_sets]):
                 gpsi[i, :] = cs.gpsi().ravel()
-                gbr[i, :] = cs.gBR().ravel()
-                gbz[i, :] = cs.gBZ().ravel()
+                gBR[i, :] = cs.gBR().ravel()
+                gBZ[i, :] = cs.gBZ().ravel()
 
         self._gpsi = gpsi
-        self._gBR = gbr
-        self._gBZ = gbz
-
-        # Notify instance that the Green's functions are up to date
-        self._uptodate = True
+        self._gBR = gBR
+        self._gBZ = gBZ
+        # Notify instance that the Green's functions are up to date only if it's
+        # rank 1. Rank 2 FieldOperators get their status from associated rank 1s
+        if self.rank == 1:
+            self._uptodate

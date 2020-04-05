@@ -41,7 +41,7 @@ class Device(FieldsOperator):
             if name not in self._current_sets:
                 self._current_sets.append([name, value])
             else:
-                raise ValueError
+                raise AttributeError('this attribute is already set')
         super().__setattr__(name, value)
 
     def __delattr__(self, name):
@@ -54,7 +54,7 @@ class Device(FieldsOperator):
         return self._current_sets
 
     @property
-    def currents(self):
+    def current(self):
         return np.array([obj.current for name, obj in self.current_sets])
 
     @property
