@@ -6,7 +6,7 @@ Introduction
 
 .. only:: html
 
-    .. notebook:: ../../../examples/jupyter/pleiades_intro.ipynb
+    .. notebook:: ../../../examples/jupyter/intro_to_coil_sets.ipynb
 
 .. only:: latex
 
