@@ -15,4 +15,6 @@ General Usage
     :maxdepth: 1
 
     pleiades-introduction
+    brb-introduction
+    equilibrium-introduction
 

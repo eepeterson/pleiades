@@ -116,6 +116,91 @@ class TREXCoil(ArbitraryPoints):
 
 
 class BRB(Device):
+    """The Device object representing the Big Red Ball at UW-Madison.
+
+    Attributes
+    ----------
+    hh_n : TREXCoil object
+        A coil object for the north helmholtz coil
+    hh_s : TREXCoil object
+        A coil object for the south helmholtz coil
+    ltrx_n : RectangularCoil object
+        A coil for the north LTRX mirror coil
+    ltrx_s : RectangularCoil object
+        A coil for the south LTRX mirror coil
+    mr1 : MagnetRing object
+        The magnet ring at 87.5 degrees N
+    mr2 : MagnetRing object
+        The magnet ring at 82.5 degrees N
+    mr3 : MagnetRing object
+        The magnet ring at 77.5 degrees N
+    mr4 : MagnetRing object
+        The magnet ring at 72.5 degrees N
+    mr5 : MagnetRing object
+        The magnet ring at 67.5 degrees N
+    mr6 : MagnetRing object
+        The magnet ring at 62.5 degrees N
+    mr7 : MagnetRing object
+        The magnet ring at 57.5 degrees N
+    mr8 : MagnetRing object
+        The magnet ring at 52.5 degrees N
+    mr9 : MagnetRing object
+        The magnet ring at 47.5 degrees N
+    mr10 : MagnetRing object
+        The magnet ring at 42.5 degrees N
+    mr11 : MagnetRing object
+        The magnet ring at 37.5 degrees N
+    mr12 : MagnetRing object
+        The magnet ring at 32.5 degrees N
+    mr13 : MagnetRing object
+        The magnet ring at 27.5 degrees N
+    mr14 : MagnetRing object
+        The magnet ring at 22.5 degrees N
+    mr15 : MagnetRing object
+        The magnet ring at 17.5 degrees N
+    mr16 : MagnetRing object
+        The magnet ring at 12.5 degrees N
+    mr17 : MagnetRing object
+        The magnet ring at 7.5 degrees N
+    mr18 : MagnetRing object
+        The magnet ring at 2.5 degrees N
+    mr19 : MagnetRing object
+        The magnet ring at 2.5 degrees S
+    mr20 : MagnetRing object
+        The magnet ring at 7.5 degrees S
+    mr21 : MagnetRing object
+        The magnet ring at 12.5 degrees S
+    mr22 : MagnetRing object
+        The magnet ring at 17.5 degrees S
+    mr23 : MagnetRing object
+        The magnet ring at 22.5 degrees S
+    mr24 : MagnetRing object
+        The magnet ring at 27.5 degrees S
+    mr25 : MagnetRing object
+        The magnet ring at 32.5 degrees S
+    mr26 : MagnetRing object
+        The magnet ring at 37.5 degrees S
+    mr27 : MagnetRing object
+        The magnet ring at 42.5 degrees S
+    mr28 : MagnetRing object
+        The magnet ring at 47.5 degrees S
+    mr29 : MagnetRing object
+        The magnet ring at 52.5 degrees S
+    mr30 : MagnetRing object
+        The magnet ring at 57.5 degrees S
+    mr31 : MagnetRing object
+        The magnet ring at 62.5 degrees S
+    mr32 : MagnetRing object
+        The magnet ring at 67.5 degrees S
+    mr33 : MagnetRing object
+        The magnet ring at 72.5 degrees S
+    mr34 : MagnetRing object
+        The magnet ring at 77.5 degrees S
+    mr35 : MagnetRing object
+        The magnet ring at 82.5 degrees S
+    mr36 : MagnetRing object
+        The magnet ring at 87.5 degrees S
+    """
     def __init__(self):
         # Global default patch settings
         super().__init__()
