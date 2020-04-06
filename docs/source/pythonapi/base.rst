@@ -10,22 +10,29 @@ Building Magnetic Configurations
    :nosignatures:
    :template: myclassinherit.rst
 
-   pleiades.CurrentFilamentSet
    pleiades.RectangularCoil
    pleiades.Device
+   pleiades.CurrentFilamentSet
+   pleiades.FieldsOperator
+
+   :toctree: generated
+   :nosignatures:
+   :template: myfunction.rst
+
+   pleiades.compute_greens
 
 
-Building Grids
---------------
+Building Meshes
+---------------
 
 .. autosummary::
    :toctree: generated
    :nosignatures:
    :template: myclassinherit.rst
 
-   pleiades.Grid
-   pleiades.RectGrid
-   pleiades.PointsGrid
+   pleiades.Mesh
+   pleiades.RectMesh
+   pleiades.PointsMesh
    pleiades.RChord
    pleiades.ZChord
    pleiades.SphericalRChord

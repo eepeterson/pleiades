@@ -3,7 +3,8 @@ import warnings
 import math
 import numpy as np
 import matplotlib as mpl
-from matplotlib.patches import Polygon, Wedge
+import matplotlib.patches as patches
+from matplotlib.path import Path
 from matplotlib.collections import PatchCollection
 
 from pleiades import ArbitraryPoints, RectangularCoil, MagnetRing, Device
@@ -18,14 +19,18 @@ class TREXCoil(ArbitraryPoints):
     _Z_REL_POS = np.linspace(-.105469,.105469, 16)
     _R_REL_POS = np.linspace(0, .067083, 6)
 
+    _codes = [Path.MOVETO,
+              Path.LINETO,
+              Path.LINETO,
+              Path.LINETO,
+              Path.CLOSEPOLY]
+
     def __init__(self, z0=1.1, **kwargs):
-        self._z0 = 0.
         r = self._RMIN + self._R_REL_POS
         z = z0 + self._Z_REL_POS
         rz_pts = [(ri, zi) for ri in r[:5] for zi in z]
         rz_pts.extend([(r[5], zi) for zi in (z[::2] + z[1::2])/2])
         super().__init__(np.array(rz_pts), **kwargs)
-        self.z0 = z0
 
     @property
     def z0(self):
@@ -45,7 +50,19 @@ class TREXCoil(ArbitraryPoints):
 
     @property
     def _verts(self):
-        pass
+        rpts, zpts = self._rz_pts[:, 0], self._rz_pts[:, 1]
+        rmin, rmax = np.amin(rpts) - self._DR/2, np.amax(rpts) + self._DR/2
+        zmin, zmax = np.amin(zpts) - self._DZ/2, np.amax(zpts) + self._DZ/2
+        verts = np.array([[rmin, zmin],
+                          [rmin, zmax],
+                          [rmax, zmax],
+                          [rmax, zmin],
+                          [rmin, zmin]])
+        return verts
+
+    @property
+    def patch(self):
+        return patches.PathPatch(Path(self._verts, self._codes))
 
     @property
     def area(self):
@@ -102,23 +119,22 @@ class BRB(Device):
     def __init__(self):
         # Global default patch settings
         super().__init__()
-        kwargs = {'fc': '.35', 'ec': 'k'}
 
         # Set TREX HH coil default parameters
         z0 = 1.1
-        self.hh_n = TREXCoil(z0, **kwargs)
-        self.hh_s = TREXCoil(-z0, **kwargs)
+        patch_kw = {'fc': '.35', 'ec': 'k'}
+        self.hh_n = TREXCoil(z0, patch_kw=patch_kw)
+        self.hh_s = TREXCoil(-z0, patch_kw=patch_kw)
 
         # Set LTRX mirror coil default parameters
         r0, z0 = 0.185725, 1.6367
         dr, dz = 0.010583333, 0.01031667
-        ltrx_n = RectangularCoil(r0, z0, nr=10, nz=13, dr=dr, dz=dz, **kwargs)
-        ltrx_s = RectangularCoil(r0, -z0, nr=10, nz=13, dr=dr, dz=dz, **kwargs)
+        ltrx_n = RectangularCoil(r0, z0, nr=10, nz=13, dr=dr, dz=dz,
+                                 patch_kw=patch_kw)
+        ltrx_s = RectangularCoil(r0, -z0, nr=10, nz=13, dr=dr, dz=dz,
+                                 patch_kw=patch_kw)
         self.ltrx_n = ltrx_n
         self.ltrx_s = ltrx_s
-
-        # Set default magnet cage parameters
-        kwargs.update({'current': 2710.68, 'height': 0.0254, 'width': 0.0381})
 
         # Build array of r0, z0, mu_hat values for all 36 magnet rings
         centroid_radius = 1.514475
@@ -130,12 +146,18 @@ class BRB(Device):
         rzmu[1:-1, 2] = theta + np.mod(np.arange(1, 35), 2)*180
         rzmu[-1, :] = [0.0768, -1.5117, 0.]
 
+        # Set default magnet cage parameters
+        mag_kw = {'current': 2710.68, 'height': 0.0254, 'width': 0.0381}
+
         for i, (r0, z0, mu_hat) in enumerate(rzmu):
+            kwargs = {'r0': r0, 'z0': z0, 'mu_hat': mu_hat}
+            kwargs.update(mag_kw)
             if np.mod(i, 2):
-                kwargs['fc'] = 'r'
+                patch_kw = {'fc': 'r'}
             else:
-                kwargs['fc'] = 'b'
-            setattr(self, f'mr{i+1}', MagnetRing(r0, z0, **kwargs)) 
+                patch_kw = {'fc': 'b'}
+            kwargs['patch_kw'] = patch_kw
+            setattr(self, f'mr{i+1}', MagnetRing(**kwargs)) 
 
     def add_cathode(self):
         raise NotImplementedError("Can't add cathodes to BRB yet")
@@ -144,4 +166,4 @@ class BRB(Device):
         raise NotImplementedError("Can't add anode to BRB yet")
 
     def add_sweep(self, center,r,theta1,theta2,width=None,**kwargs):
-        self.patches.append(Wedge(center,r,theta1,theta2,width=width,**kwargs))
+        self.patches.append(patches.Wedge(center,r,theta1,theta2,width=width,**kwargs))

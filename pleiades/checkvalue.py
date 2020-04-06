@@ -17,27 +17,11 @@ def flag_greens_on_get(func):
 
 
 def flag_greens_on_set(func):
-    """Decorator to determine if Green's functions need to be recomputed.
-
-    This function is a decorator that should be applied to property setter
-    methods for attributes that if changed would require recomputing the Green's
-    functions. These include parameters related to current filament positions
-    and weights
-
-    """
+    """Decorator to signal Green's functions are now out of date."""
     def setter_wrapper(obj, value):
-        # Get the present value of the desired attribute for comparison
-        present_val = getattr(obj, func.__name__)
-
-        # If the present value is None, the Green's functions cannot be up to
-        # date. If the present value is not None, check if the values are
-        # considered equal
-        if present_val is None:
-            obj._uptodate = False
-        else:
-            obj._uptodate = np.allclose(present_val, value, rtol=_RTOL,
-                                        atol=_ATOL)
-        return func(obj, value)
+        retval = func(obj, value)
+        obj._uptodate = False
+        return retval
     return setter_wrapper
 
 

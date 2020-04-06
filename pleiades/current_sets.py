@@ -76,10 +76,11 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     """
 
     def __init__(self, current=1., weights=None, patch_kw=None, **kwargs):
-        self._current = None
-        self._weights = None
         self.current = current
-        self.weights = weights
+        if weights is None:
+            self._weights = np.ones(self.npts)
+        else:
+            self._weights = weights
         self.patch_kw = patch_kw
         super().__init__(**kwargs)
 
@@ -127,11 +128,7 @@ class CurrentFilamentSet(metaclass=ABCMeta):
     @weights.setter
     @cv.flag_greens_on_set
     def weights(self, weights):
-        if weights is None:
-            self._weights = np.ones(self.npts)
-        else:
-            assert len(weights) == self.npts
-            self._weights = np.asarray(weights)
+        self._weights = np.asarray(weights)
 
     @total_current.setter
     def total_current(self, total_current):
@@ -190,7 +187,7 @@ class CurrentFilamentSet(metaclass=ABCMeta):
             ax.plot(r, z, marker=markers[i], **kwargs)
 
 
-class ArbitraryPoints(CurrentFilamentSet):
+class ArbitraryPoints(CurrentFilamentSet, FieldsOperator):
     """A set of arbitrary points in the R-Z plane with the same current
 
     Parameters
@@ -222,17 +219,17 @@ class ArbitraryPoints(CurrentFilamentSet):
     def patch(self):
         return None
 
-    @cv.flag_greens_on_transform((0., 0.))
     def translate(self, vector):
         self._rz_pts += np.array(vector)
+        self._uptodate = False
 
-    @cv.flag_greens_on_transform(0.)
     def rotate(self, angle, pivot=(0., 0.)):
         self._angle += angle
         angle = math.pi*angle / 180
         c, s = np.cos(angle), np.sin(angle)
         rotation = np.array([[c, -s], [s, c]])
         self._rz_pts = (self.rz_pts - pivot) @ rotation + np.asarray(pivot)
+        self._uptodate = False
 
 
 class RectangularCoil(CurrentFilamentSet, FieldsOperator):
@@ -409,8 +406,8 @@ class RectangularCoil(CurrentFilamentSet, FieldsOperator):
     @centroid.setter
     @cv.flag_greens_on_set
     def centroid(self, centroid):
-        self.r0 = centroid[0]
-        self.z0 = centroid[1]
+        self._r0 = centroid[0]
+        self._z0 = centroid[1]
 
     @nr.setter
     @cv.flag_greens_on_set
@@ -437,11 +434,9 @@ class RectangularCoil(CurrentFilamentSet, FieldsOperator):
     def angle(self, angle):
         self._angle = angle
 
-    @cv.flag_greens_on_transform((0., 0.))
     def translate(self, vector):
         self.centroid += np.array(vector)
 
-    @cv.flag_greens_on_transform(0.)
     def rotate(self, angle, pivot=(0., 0.)):
         self.angle += angle
         angle = math.pi*angle / 180
@@ -450,7 +445,7 @@ class RectangularCoil(CurrentFilamentSet, FieldsOperator):
         self.centroid = (self.centroid - pivot) @ rotation + np.asarray(pivot)
 
 
-class MagnetRing(CurrentFilamentSet):
+class MagnetRing(CurrentFilamentSet, FieldsOperator):
     """A rectangular cross-section axisymmetric dipole magnet ring.
 
     A MagnetRing models a series of permanent dipole magnets placed
@@ -498,17 +493,17 @@ class MagnetRing(CurrentFilamentSet):
               Path.LINETO,
               Path.CLOSEPOLY]
 
-    def __init__(self, r0, z0, width=0.01, height=0.01, mu_hat=0., **kwargs):
+    def __init__(self, r0=1., z0=0., width=0.01, height=0.01, mu_hat=0., **kwargs):
         self.r0 = r0
         self.z0 = z0
         self.width = width
         self.height = height
         self.mu_hat = mu_hat
-        if kwargs.get('weights', None) is None:
+        weights = kwargs.pop('weights', None)
+        if weights is None:
             weights = np.ones(16)
-            weights[8:] = -1.
-            kwargs['weights'] = weights
-        super().__init__(**kwargs)
+            weights[:8] = -1.
+        super().__init__(weights=weights, **kwargs)
 
     @property
     def r0(self):
@@ -548,12 +543,12 @@ class MagnetRing(CurrentFilamentSet):
         rspace, zspace = hw*np.ones(hnpts), np.linspace(-hh, hh, hnpts)
 
         rz_pts = np.empty((npts, 2))
-        rz_pts[0:hnpts, 0] = -rspace
-        rz_pts[hnpts:, 0] = -rspace
-        rz_pts[0:hnpts, 1] = zspace
-        rz_pts[hnpts:, 1] = zspace
+        rz_pts[0:hnpts, 0] = r0 - rspace
+        rz_pts[hnpts:, 0] = r0 + rspace
+        rz_pts[0:hnpts, 1] = z0 + zspace
+        rz_pts[hnpts:, 1] = z0 + zspace
 
-        if np.isclose(self.mu_hat, 0):
+        if np.isclose(self.mu_hat, 0, rtol=0., atol=cv._ATOL):
             return rz_pts
         return rotate(rz_pts, self.mu_hat, pivot=(r0, z0))
 
@@ -566,7 +561,7 @@ class MagnetRing(CurrentFilamentSet):
 
     @property
     def patch(self):
-        return patches.PathPatch(Path(self._verts, self._codes))
+        return patches.PathPatch(Path(self._verts, self._codes), **self.patch_kw)
 
     @r0.setter
     @cv.flag_greens_on_set
@@ -581,8 +576,8 @@ class MagnetRing(CurrentFilamentSet):
     @centroid.setter
     @cv.flag_greens_on_set
     def centroid(self, centroid):
-        self.r0 = centroid[0]
-        self.z0 = centroid[1]
+        self._r0 = centroid[0]
+        self._z0 = centroid[1]
 
     @width.setter
     @cv.flag_greens_on_set
@@ -599,11 +594,9 @@ class MagnetRing(CurrentFilamentSet):
     def mu_hat(self, mu_hat):
         self._mu_hat = mu_hat
 
-    @cv.flag_greens_on_transform((0., 0.))
     def translate(self, vector):
         self.centroid += np.array(vector)
 
-    @cv.flag_greens_on_transform(0.)
     def rotate(self, angle, pivot=(0., 0.)):
         self.mu_hat += angle
         angle = math.pi*angle / 180

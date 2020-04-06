@@ -11,21 +11,17 @@ class Device(FieldsOperator):
 
     Parameters
     ----------
+    **kwargs :
+        Any valid argument for FieldsOperator
 
     Attributes
     ----------
-    mesh : pleiades.Mesh object
-        A mesh on which to compute Green's functions and fields
+    current_sets: iterable
+        List of CurrentFilamentSet objects
     R : np.array
         The R locations of the mesh
     Z : np.array
         The Z locations of the mesh
-    psi : np.array
-        The psi values on the mesh
-    BR : np.array
-        The BR values on the mesh
-    BZ : np.array
-        The BZ values on the mesh
     patches : list
         A list of patch objects for the configuration
     patch_coll : matplotlib.patches.PatchCollection
@@ -38,28 +34,32 @@ class Device(FieldsOperator):
 
     def __setattr__(self, name, value):
         if isinstance(value, CurrentFilamentSet):
-            if name not in self._current_sets:
-                self._current_sets.append([name, value])
+            if value not in self:
+                self._current_sets.append(name)
             else:
                 raise AttributeError('this attribute is already set')
         super().__setattr__(name, value)
 
     def __delattr__(self, name):
         if name in self._current_sets:
-            self._current_sets.remove([name, getattr(self, name)])
+            self._current_sets.remove(name)
         super().__delattr__(name)
+
+    def __iter__(self):
+        for cset in self._current_sets:
+            yield getattr(self, cset)
 
     @property
     def current_sets(self):
-        return self._current_sets
+        return list(self)
 
     @property
     def current(self):
-        return np.array([obj.current for name, obj in self.current_sets])
+        return np.array([cset.current for cset in self])
 
     @property
     def rzw(self):
-        return [cset.rzw for cset in self.current_sets]
+        return [cset.rzw for cset in self]
 
     @property
     def mesh(self):
@@ -75,7 +75,7 @@ class Device(FieldsOperator):
 
     @property
     def patches(self):
-        return [obj.patch for name, obj in self.current_sets]
+        return [cset.patch for cset in self]
 
     @property
     def patch_coll(self):
@@ -83,16 +83,16 @@ class Device(FieldsOperator):
 
     @property
     def _uptodate(self):
-        return all([obj._uptodate for name, obj in self.current_sets])
+        return all([cset._uptodate for cset in self])
 
     @mesh.setter
     def mesh(self, mesh):
         self._mesh = mesh
-        for cset in [obj for name, obj in self.current_sets]:
+        for cset in self:
             cset.mesh = mesh
 
     def plot_currents(self, ax, **kwargs):
-        for cset in [obj for name, obj in self.current_sets]:
+        for cset in self:
             cset.plot(ax, **kwargs)
 
     def plot_psi(self, ax, *args, **kwargs):
