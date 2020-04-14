@@ -84,6 +84,22 @@ class CurrentFilamentSet(metaclass=ABCMeta):
         self.patch_kw = patch_kw
         super().__init__(**kwargs)
 
+    def __repr__(self):
+        string = 'CurrentFilamentSet\n'
+        string += '{0: >16}  {1}\n'.format('Class:', self.__class__)
+        string += '{0: >16}  {1:.6e} amps\n'.format('Current:', self.current)
+        string += '{0: >16}  {1}\n'.format('N Filaments:', self.npts)
+        string += '{0: >16}  {1:.6e} amps\n'.format('Total Current:',
+                                                    self.total_current)
+        for i, (r, z, w) in enumerate(self.rzw):
+            rzwtxt = '[{0:.6e}, {1:.6e}, {2:.6e}]'.format(r, z, w)
+            if i == 0:
+                string += '{0: >16}  {1}\n'.format('R, Z, W:', rzwtxt)
+            else:
+                string += '{0: >16}  {1}\n'.format('', rzwtxt)
+
+        return string
+
     @abstractproperty
     def npts(self):
         pass
