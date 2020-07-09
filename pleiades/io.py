@@ -34,6 +34,7 @@ class EQDSK(dict):
 
 
 def write_eqdsk(Rho,Z,psi,plas_currents,fname,title):
+    title='PLEIADES '+title
     if len(title) >= 26:
         title = title[0:26]
     title = title.ljust(26) + "cursign,nnr,nnz,nnv = "
