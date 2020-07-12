@@ -34,5 +34,8 @@ class WHAM(Device):
         self.cc1 = RectangularCoil(r0, z0, nr=nr, nz=nz, dr=dr, dz=dz)
         self.cc2 = RectangularCoil(r0, -z0, nr=nr, nz=nz, dr=dr, dz=dz)
 
+        # Baseline current values based on 100A/mm^2 in central coils and
+        # 120A/mm^2 in HTS coils
+
 
 

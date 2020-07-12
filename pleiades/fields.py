@@ -188,10 +188,10 @@ class FieldsOperator(metaclass=ABCMeta):
         """
         current = current if current is not None else self.current
         if self.rank == 1:
-            return current*self.gBR(mesh=mesh)
+            return current*self.gBZ(mesh=mesh)
 
         if self.rank == 2:
-            return current @ self.gBR(mesh=mesh)
+            return current @ self.gBZ(mesh=mesh)
 
     def _compute_greens(self):
         """Compute and assign the Green's functions for psi, BR, and BZ"""
