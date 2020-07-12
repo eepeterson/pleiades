@@ -16,5 +16,6 @@ General Usage
 
     pleiades-introduction
     brb-introduction
+    wham-introduction
     equilibrium-introduction
 
