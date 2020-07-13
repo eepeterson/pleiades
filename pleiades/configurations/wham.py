@@ -22,8 +22,8 @@ class WHAM(Device):
 
         # Set HTS mirror coil default parameters
         r0, z0 = 0.25, 0.942
-        dr, dz = 0.01, 0.01
-        nr, nz = 38, 11
+        dr, dz = 0.0475, 0.0275
+        nr, nz = 8, 4
         self.hts1 = RectangularCoil(r0, z0, nr=nr, nz=nz, dr=dr, dz=dz)
         self.hts2 = RectangularCoil(r0, -z0, nr=nr, nz=nz, dr=dr, dz=dz)
 
