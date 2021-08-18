@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 
 def compute_equilibrium(R,Z,Pfunc,psi_vac,g_psi,tol=1E-10,maxiter=100,relax=0.0,plas_clip=None,plotit=False):
     """ Compute jxB=gradP equilibrium for given P as function of R
-    """
+    """ 
+    # Test add comment to pull new_feature
     psi0 = psi_vac.flatten()
     psi = psi_vac.flatten()
     psi_old = psi_vac.flatten()
